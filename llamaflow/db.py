@@ -244,7 +244,8 @@ class DatabaseHandler:
                 )
                 ORDER BY index
                 LIMIT %s
-            ''', (limit,))
+            '''
+            self.cursor.execute(query, (limit,))
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error fetching unprocessed chunks: {e}")
