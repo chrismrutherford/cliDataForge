@@ -300,6 +300,37 @@ class DatabaseHandler:
             print(f"Error getting column names: {e}")
             return []
             
+    def delete_column(self, column: str) -> bool:
+        """Delete a column from the data table"""
+        self.connect()
+        try:
+            # Verify column exists
+            self.cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = %s AND column_name = %s
+            """, (self.data_table, column))
+            
+            if not self.cursor.fetchone():
+                raise ValueError(f"Column '{column}' does not exist in table '{self.data_table}'")
+            
+            # Don't allow deletion of essential columns
+            if column.lower() in ['index', 'chunk']:
+                raise ValueError(f"Cannot delete essential column '{column}'")
+            
+            # Drop the column
+            self.cursor.execute(f"""
+                ALTER TABLE "{self.data_table}"
+                DROP COLUMN "{column}"
+            """)
+            
+            self.conn.commit()
+            return True
+            
+        except Exception as e:
+            self.conn.rollback()
+            raise Exception(f"Error deleting column: {str(e)}")
+            
     def get_column_contents(self, column: str) -> List[str]:
         """Get contents of specified column as a list"""
         self.connect()

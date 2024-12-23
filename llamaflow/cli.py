@@ -270,5 +270,33 @@ def save_column(output_file: str, column: str, data_table: str):
         if 'db' in locals():
             db.disconnect()
 
+@cli.command(name='delete-column')
+@click.option('--column', required=True, help='Column to delete')
+@click.option('--data-table', default='llamaFlowData', show_default=True, help='Name of data processing table')
+def delete_column(column: str, data_table: str):
+    """Completely remove specified column from the table"""
+    try:
+        db = DatabaseHandler(data_table=data_table)
+        try:
+            contents = db.get_column_contents(column)
+            if not contents:
+                click.echo(f"No data found in column '{column}'")
+                return
+                
+            import json
+            with open(output_file, 'w') as f:
+                json.dump(contents, f, indent=2)
+                
+            click.echo(f"Successfully saved {len(contents)} entries from column '{column}' to {output_file}")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
 if __name__ == '__main__':
     cli()
