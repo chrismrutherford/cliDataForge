@@ -17,6 +17,63 @@ These options are available for most commands:
 
 ## Commands
 
+### save-column
+
+Save contents of specified column to a JSON file.
+
+```bash
+python -m llamaflow save-column OUTPUT_FILE --column COLUMN [options]
+```
+
+Arguments:
+- `OUTPUT_FILE`: Path to save the JSON file
+- `--column`: Required. Column to save
+
+### show-prompt
+
+Show the system prompt for a specific processing stage.
+
+```bash
+python -m llamaflow show-prompt STAGE [options]
+```
+
+Arguments:
+- `STAGE`: The processing stage name
+
+### add-prompt
+
+Add or update system prompt for a processing stage from a file.
+
+```bash
+python -m llamaflow add-prompt STAGE PROMPT_FILE [options]
+```
+
+Arguments:
+- `STAGE`: The processing stage name
+- `PROMPT_FILE`: Path to file containing the prompt
+
+### delete-prompt
+
+Delete the system prompt for a specific processing stage.
+
+```bash
+python -m llamaflow delete-prompt STAGE [options]
+```
+
+Arguments:
+- `STAGE`: The processing stage name
+
+### delete-column
+
+Delete a column from the data table.
+
+```bash
+python -m llamaflow delete-column --column COLUMN [options]
+```
+
+Options:
+- `--column`: Required. Column to delete
+
 ### process-all
 
 Process all unprocessed chunks in parallel through the pipeline.
@@ -101,10 +158,13 @@ The following environment variables can be used:
 - Multi-stage processing with configurable source/destination columns
 - Parallel processing with configurable thread count
 - Automatic column creation and validation
-- Minimum cycle time enforcement (15 seconds)
 - Progress tracking and error handling
-- Retry logic for LLM API calls
+- Retry logic for LLM API calls (3 attempts)
 - Transaction management for database operations
+- System prompt management (add/update/delete/show)
+- Column management (create/delete/clear/save)
+- Detailed column information display
+- JSON data import/export capabilities
 
 ## Pipeline Stages
 

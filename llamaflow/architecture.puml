@@ -43,10 +43,20 @@ package "LlamaFlow" {
         interface "process_all" as PA
         interface "insert_data" as ID
         interface "clear_column" as CC
+        interface "save_column" as SC
+        interface "show_prompt" as SP
+        interface "add_prompt" as AP
+        interface "delete_prompt" as DP
+        interface "delete_column" as DC
         CLI --> PC
         CLI --> PA
         CLI --> ID
         CLI --> CC
+        CLI --> SC
+        CLI --> SP
+        CLI --> AP
+        CLI --> DP
+        CLI --> DC
     }
 
     package "Core" {
