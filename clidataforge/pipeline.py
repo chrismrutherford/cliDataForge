@@ -32,6 +32,8 @@ class PipelineExecutor:
             source, dest = stage.strip().split(':')
             self.stages.append((source.strip(), dest.strip()))
             
+        print(f"\nInitializing pipeline with stages: {self.stages}")
+        
         # Validate columns exist and are spelled correctly
         self.validate_pipeline_columns()
         

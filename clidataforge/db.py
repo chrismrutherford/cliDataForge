@@ -293,6 +293,20 @@ class DatabaseHandler:
             # Get source column from first pipeline stage
             source_col = self.pipeline_stages[0][0] if self.pipeline_stages else columns[0]
             
+            print("\nDatabase state:")
+            print(f"Pipeline stages: {self.pipeline_stages}")
+            print(f"Source column: {source_col}")
+            print(f"Target columns: {columns}")
+            print(f"Column checks: {column_checks}")
+            
+            # Verify source column exists and has data
+            self.cursor.execute(f"""
+                SELECT COUNT(*) FROM "{self.data_table}" 
+                WHERE "{source_col}" IS NOT NULL
+            """)
+            source_count = self.cursor.fetchone()[0]
+            print(f"Rows with data in source column '{source_col}': {source_count}")
+            
             # Build query to get rows where source exists and any destination is NULL
             query = f'''
                 SELECT DISTINCT d.index, d."{source_col}"
@@ -304,10 +318,10 @@ class DatabaseHandler:
             '''
             
             print(f"\nExecuting query:\n{query}\nwith limit={limit}")
-            print(f"Source column: {source_col}")
-            print(f"Column checks: {column_checks}")
-            
             self.cursor.execute(query, (limit,))
+            results = self.cursor.fetchall()
+            print(f"Query returned {len(results)} results")
+            return results
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error fetching unprocessed chunks: {e}")
