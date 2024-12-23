@@ -29,7 +29,7 @@ def cli():
 @click.option('--api-key', envvar='LLAMAFLOW_API_KEY', help='API key for LLM service')
 @click.option('--base-url', envvar='OPENAI_BASE_URL', help='Base URL for OpenAI-compatible API service')
 @click.option('--model', default='meta-llama/llama-3.3-70b-instruct', help='Model to use')
-@click.option('--threads', default=1, type=int, help='Number of parallel threads')
+@click.option('--threads', default=1, type=int, help='Number of parallel threads (default: 1)')
 @click.option('--stages', required=True, help='Comma-separated list of source:destination column pairs (e.g. chunk:summary,summary:analysis)')
 @click.option('--sys-table', default='llamaFlowSystem', show_default=True, help='Name of system prompts table')
 @click.option('--data-table', default='llamaFlowData', show_default=True, help='Name of data processing table')
@@ -54,7 +54,7 @@ def process_all(api_key: str, base_url: str, model: str, threads: int, stages: s
             try:
                 responses = pipeline.execute_pipeline(chunk_index, prompt)
                 duration = (datetime.now() - start_time).total_seconds()
-                click.echo(f"Successfully processed chunk {chunk_index} in {duration:.1f}s")
+                bar.update(1)
                 return True
             except Exception as e:
                 duration = (datetime.now() - start_time).total_seconds()
@@ -62,30 +62,39 @@ def process_all(api_key: str, base_url: str, model: str, threads: int, stages: s
                 return False
 
         total_start = datetime.now()
-        total_chunks = 0
-        total_successful = 0
+        # Get total count and already processed count
+        total_count = db.get_total_count()
+        processed_count = db.get_processed_count()
+        remaining_count = total_count - processed_count
+        
+        print(f"\nProcessing remaining {remaining_count} chunks ({processed_count}/{total_count} already processed)...")
+        with click.progressbar(length=total_count,
+                             label='Progress',
+                             show_pos=True,
+                             item_show_func=lambda x: f"{x}/{total_count} processed" if x else None) as bar:
+            total_chunks = processed_count
+            total_successful = processed_count
+            # Update progress bar to show already processed items
+            bar.update(processed_count)
 
-        while True:
+            # Create a single executor for all batches
             with ThreadPoolExecutor(max_workers=threads) as executor:
-                batch_start = datetime.now()
-                chunks = db.get_unprocessed_chunks(limit=threads * 2)  # Get more chunks to keep threads busy
-                if not chunks:
-                    break
+                while total_chunks < total_count:
+                    batch_start = datetime.now()
+                    chunks = db.get_unprocessed_chunks(limit=threads * 2)  # Get more chunks to keep threads busy
+                    if not chunks:
+                        break
 
-                # Submit all chunks to thread pool at once
-                futures = [executor.submit(process_chunk_wrapper, chunk) for chunk in chunks]
+                    # Submit all chunks to thread pool at once
+                    futures = [executor.submit(process_chunk_wrapper, chunk) for chunk in chunks]
+                    
+                    # Process results as they complete
+                    for future in futures:
+                        result = future.result()
+                        total_chunks += 1
+                        if result:
+                            total_successful += 1
                 
-                # Process results as they complete
-                for future in futures:
-                    result = future.result()
-                    total_chunks += 1
-                    if result:
-                        total_successful += 1
-                
-                batch_duration = (datetime.now() - batch_start).total_seconds()
-                click.echo(f"\nBatch complete: {total_successful}/{total_chunks} successful in {batch_duration:.1f}s")
-                if total_chunks > 0:
-                    click.echo(f"Average time per chunk: {batch_duration/total_chunks:.1f}s")
 
         total_duration = (datetime.now() - total_start).total_seconds()
         click.echo("\nProcessing complete!")
@@ -111,8 +120,12 @@ def process_all(api_key: str, base_url: str, model: str, threads: int, stages: s
 def process_chunk(api_key: str, base_url: str, model: str, stages: str, sys_table: str, data_table: str):
     """Process a single unprocessed chunk through the pipeline"""
     try:
+        # Parse stages
+        stage_pairs = [(s.split(':')[0].strip(), s.split(':')[1].strip()) 
+                      for s in stages.split(',')]
+        
         llm = LLMClient(api_key=api_key, base_url=base_url)
-        db = DatabaseHandler(sys_table=sys_table, data_table=data_table)
+        db = DatabaseHandler(sys_table=sys_table, data_table=data_table, pipeline_stages=stage_pairs)
         pipeline = PipelineExecutor(llm, db, stages, model=model)
         
         chunks = db.get_unprocessed_chunks(limit=1)

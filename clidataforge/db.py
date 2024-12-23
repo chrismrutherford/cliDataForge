@@ -290,16 +290,40 @@ class DatabaseHandler:
             if not column_checks:
                 return []
                 
-            print("\nStarting get_unprocessed_chunks...")
             # Get source column from first pipeline stage
             source_col = self.pipeline_stages[0][0] if self.pipeline_stages else columns[0]
             
-            print("\nDatabase state details:")
-            print(f"Pipeline stages: {self.pipeline_stages}")
-            print(f"Source column: {source_col}")
-            print(f"Target columns: {columns}")
-            print(f"Column checks: {column_checks}")
-            
+            # First check if the table exists
+            self.cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                )
+            """, (self.data_table,))
+            table_exists = self.cursor.fetchone()[0]
+            print(f"\nTable '{self.data_table}' exists: {table_exists}")
+
+            if not table_exists:
+                print(f"Table '{self.data_table}' does not exist!")
+                return []
+
+            # Check if source column exists
+            self.cursor.execute("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s 
+                    AND column_name = %s
+                )
+            """, (self.data_table, source_col))
+            column_exists = self.cursor.fetchone()[0]
+            print(f"Source column '{source_col}' exists: {column_exists}")
+
+            if not column_exists:
+                print(f"Source column '{source_col}' does not exist!")
+                return []
+
             # Verify source column exists and has data
             self.cursor.execute(f"""
                 SELECT COUNT(*) FROM "{self.data_table}" 
@@ -321,15 +345,9 @@ class DatabaseHandler:
                 LIMIT %s
             '''
             
-            # Print the actual SQL that will be executed with parameters substituted
-            sql = self.cursor.mogrify(query, (limit,)).decode()
-            print(f"\nExecuting query:\n{sql}")
-            
             # Execute and get results
             self.cursor.execute(query, (limit,))
             results = self.cursor.fetchall()
-            
-            print(f"\nQuery returned {len(results)} results")
             if len(results) == 0:
                 print("\nChecking data in relevant columns:")
                 # Check source column data
@@ -437,6 +455,48 @@ class DatabaseHandler:
             self.conn.rollback()
             raise Exception(f"Error setting prompt: {str(e)}")
             
+    def get_total_count(self) -> int:
+        """Get total count of chunks in the database"""
+        self.connect()
+        try:
+            source_col = self.pipeline_stages[0][0]
+            query = f'''
+                SELECT COUNT(*)
+                FROM "{self.data_table}"
+                WHERE "{source_col}" IS NOT NULL
+            '''
+            self.cursor.execute(query)
+            return self.cursor.fetchone()[0]
+        except Exception as e:
+            print(f"Error getting total count: {e}")
+            return 0
+            
+    def get_processed_count(self) -> int:
+        """Get count of already processed chunks"""
+        self.connect()
+        try:
+            # Get the destination columns from the pipeline stages
+            columns = [stage[1] for stage in self.pipeline_stages]
+            if not columns:
+                return 0
+                
+            # Build query to count rows where all destinations are NOT NULL
+            source_col = self.pipeline_stages[0][0]
+            not_null_conditions = ' AND '.join([f'd."{col}" IS NOT NULL' for col in columns])
+            query = f'''
+                SELECT COUNT(*)
+                FROM "{self.data_table}" d
+                WHERE d."{source_col}" IS NOT NULL
+                AND ({not_null_conditions})
+            '''
+            
+            self.cursor.execute(query)
+            return self.cursor.fetchone()[0]
+            
+        except Exception as e:
+            print(f"Error getting processed count: {e}")
+            return 0
+
     def get_column_contents(self, column: str) -> List[str]:
         """Get contents of specified column as a list"""
         self.connect()
