@@ -309,13 +309,13 @@ class DatabaseHandler:
             print(f"Rows with data in source column '{source_col}': {source_count}")
             
             print("\nConstructing query...")
-            # Build query to get rows where source exists and any destination is NULL
+            # Build query to get rows where source exists and destination is NULL
             query = f'''
                 -- Query to find unprocessed chunks
-                SELECT DISTINCT d.index, d."{source_col}"
+                SELECT d.index, d."{source_col}"
                 FROM "{self.data_table}" d
                 WHERE d."{source_col}" IS NOT NULL
-                AND ({' OR '.join(column_checks)})
+                AND d."{columns[0]}" IS NULL
                 ORDER BY d.index
                 LIMIT %s
             '''
