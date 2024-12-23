@@ -290,10 +290,11 @@ class DatabaseHandler:
             if not column_checks:
                 return []
                 
+            print("\nStarting get_unprocessed_chunks...")
             # Get source column from first pipeline stage
             source_col = self.pipeline_stages[0][0] if self.pipeline_stages else columns[0]
             
-            print("\nDatabase state:")
+            print("\nDatabase state details:")
             print(f"Pipeline stages: {self.pipeline_stages}")
             print(f"Source column: {source_col}")
             print(f"Target columns: {columns}")
@@ -307,8 +308,10 @@ class DatabaseHandler:
             source_count = self.cursor.fetchone()[0]
             print(f"Rows with data in source column '{source_col}': {source_count}")
             
+            print("\nConstructing query...")
             # Build query to get rows where source exists and any destination is NULL
             query = f'''
+                -- Query to find unprocessed chunks
                 SELECT DISTINCT d.index, d."{source_col}"
                 FROM "{self.data_table}" d
                 WHERE d."{source_col}" IS NOT NULL
