@@ -321,12 +321,27 @@ class DatabaseHandler:
             '''
             
             # Print the actual SQL that will be executed with parameters substituted
-            print(f"\nExecuting query:\n{self.cursor.mogrify(query, (limit,)).decode()}")
+            sql = self.cursor.mogrify(query, (limit,)).decode()
+            print(f"\nExecuting query:\n{sql}")
+            
+            # Execute and get results
             self.cursor.execute(query, (limit,))
             results = self.cursor.fetchall()
-            print(f"Query returned {len(results)} results")
+            
+            print(f"\nQuery returned {len(results)} results")
+            if len(results) == 0:
+                print("\nChecking data in relevant columns:")
+                # Check source column data
+                self.cursor.execute(f'SELECT COUNT(*) FROM "{self.data_table}" WHERE "{source_col}" IS NOT NULL')
+                source_count = self.cursor.fetchone()[0]
+                print(f"- Rows with data in source column '{source_col}': {source_count}")
+                
+                # Check target column nulls
+                self.cursor.execute(f'SELECT COUNT(*) FROM "{self.data_table}" WHERE "{columns[0]}" IS NULL')
+                null_count = self.cursor.fetchone()[0]
+                print(f"- Rows with NULL in target column '{columns[0]}': {null_count}")
+            
             return results
-            return self.cursor.fetchall()
         except Exception as e:
             print(f"Error fetching unprocessed chunks: {e}")
             return []
