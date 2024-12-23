@@ -298,14 +298,14 @@ class DatabaseHandler:
                 SELECT DISTINCT d.index, d."{source_col}"
                 FROM "{self.data_table}" d
                 WHERE d."{source_col}" IS NOT NULL
-                AND EXISTS (
-                    SELECT 1 FROM "{self.data_table}" d2
-                    WHERE d2.index = d.index
-                    AND ({' OR '.join(column_checks)})
-                )
+                AND ({' OR '.join(column_checks)})
                 ORDER BY d.index
                 LIMIT %s
             '''
+            
+            print(f"\nExecuting query:\n{query}\nwith limit={limit}")
+            print(f"Source column: {source_col}")
+            print(f"Column checks: {column_checks}")
             
             self.cursor.execute(query, (limit,))
             return self.cursor.fetchall()
