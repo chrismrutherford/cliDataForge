@@ -143,6 +143,16 @@ class DatabaseHandler:
             print(f"Error validating columns: {e}")
             self.conn.rollback()
             
+    def get_all_prompts(self) -> List[Tuple[str, str]]:
+        """Get all system prompts as (stage, prompt) tuples"""
+        self.connect()
+        try:
+            self.cursor.execute(f'SELECT stage, prompt FROM "{self.sys_table}" ORDER BY stage')
+            return self.cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching system prompts: {e}")
+            return []
+            
     def get_system_prompt(self, stage: str) -> Optional[str]:
         """Get system prompt for a specific stage"""
         self.connect()

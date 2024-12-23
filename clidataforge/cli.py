@@ -372,6 +372,33 @@ def delete_prompt(stage: str, sys_table: str):
         if 'db' in locals():
             db.disconnect()
 
+@cli.command(name='list-prompts')
+@click.option('--sys-table', default='llamaFlowSystem', show_default=True, help='Name of system prompts table')
+def list_prompts(sys_table: str):
+    """List all available system prompts and their stages"""
+    try:
+        db = DatabaseHandler(sys_table=sys_table)
+        try:
+            prompts = db.get_all_prompts()
+            if prompts:
+                click.echo("\nAvailable system prompts:")
+                for stage, prompt in prompts:
+                    click.echo(f"\nStage: {stage}")
+                    click.echo("-" * 40)
+                    click.echo(prompt)
+                    click.echo("-" * 40)
+            else:
+                click.echo("No system prompts found")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
 @cli.command(name='delete-column')
 @click.option('--column', required=True, help='Column to delete')
 @click.option('--data-table', default='llamaFlowData', show_default=True, help='Name of data processing table')
