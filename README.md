@@ -2,6 +2,24 @@
 
 cliDataForge provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
 
+
+## Pipeline Stages
+
+Pipeline stages are specified as comma-separated pairs of `source:destination` columns:
+
+- `chunk:summary`: Generate summary from input chunk
+- `summary:analysis`: Generate analysis from summary
+- `analysis:conclusion`: Generate conclusion from analysis
+
+Example pipeline specification:
+```bash
+--stages "chunk:summary,summary:analysis,analysis:conclusion"
+```
+
+Each stage's processing is guided by system prompts stored in the system prompts table.
+The pipeline automatically manages dependencies between stages and ensures data consistency.
+
+
 ## Architecture
 
 ![cliDataForge Architecture](cliDataForgeArchitecture.png)
@@ -165,19 +183,3 @@ The following environment variables can be used:
 - Column management (create/delete/clear/save)
 - Detailed column information display
 - JSON data import/export capabilities
-
-## Pipeline Stages
-
-Pipeline stages are specified as comma-separated pairs of `source:destination` columns:
-
-- `chunk:summary`: Generate summary from input chunk
-- `summary:analysis`: Generate analysis from summary
-- `analysis:conclusion`: Generate conclusion from analysis
-
-Example pipeline specification:
-```bash
---stages "chunk:summary,summary:analysis,analysis:conclusion"
-```
-
-Each stage's processing is guided by system prompts stored in the system prompts table.
-The pipeline automatically manages dependencies between stages and ensures data consistency.
