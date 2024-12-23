@@ -85,17 +85,15 @@ class PipelineExecutor:
         # Get list of actual columns from database
         actual_columns = self.db.get_column_names()
         
-        for source, dest in self.stages:
+        # First validate all source columns exist
+        for source, _ in self.stages:
             if source not in actual_columns:
                 closest = self.find_closest_match(source, actual_columns)
                 suggestion = f" Did you mean '{closest}'?" if closest else ""
                 raise ValueError(f"Source column '{source}' does not exist.{suggestion}")
-            
-            # Create destination column if it doesn't exist
-            if dest not in actual_columns:
-                self.db.validate_columns(self.stages)
-                # Refresh column list after creation
-                actual_columns = self.db.get_column_names()
+        
+        # Then ensure all destination columns exist
+        self.db.validate_columns(self.stages)
                 
     def find_closest_match(self, target: str, options: List[str]) -> Optional[str]:
         """Find the closest matching column name using simple string matching"""

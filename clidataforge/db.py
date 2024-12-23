@@ -293,11 +293,16 @@ class DatabaseHandler:
             # Get source column from first pipeline stage
             source_col = self.pipeline_stages[0][0] if self.pipeline_stages else columns[0]
             
+            # Build query to get rows where source exists and any destination is NULL
             query = f'''
-                SELECT DISTINCT d.index, d."{source_col}" as source_content
+                SELECT DISTINCT d.index, d."{source_col}"
                 FROM "{self.data_table}" d
                 WHERE d."{source_col}" IS NOT NULL
-                AND ({' OR '.join(column_checks)})
+                AND EXISTS (
+                    SELECT 1 FROM "{self.data_table}" d2
+                    WHERE d2.index = d.index
+                    AND ({' OR '.join(column_checks)})
+                )
                 ORDER BY d.index
                 LIMIT %s
             '''
