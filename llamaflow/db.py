@@ -47,10 +47,7 @@ class DatabaseHandler:
                 self.cursor.execute(f'''
                     CREATE TABLE "{self.data_table}" (
                         index SERIAL PRIMARY KEY,
-                        chunk TEXT NOT NULL,
-                        summary TEXT,
-                        analysis TEXT,
-                        conclusion TEXT
+                        chunk TEXT NOT NULL
                     )
                 ''')
                 
@@ -218,33 +215,32 @@ class DatabaseHandler:
         """Get unprocessed chunks from the database"""
         self.connect()
         try:
-            self.cursor.execute(f'''
-                WITH stage_columns AS (
-                    SELECT DISTINCT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_name = '{self.data_table}'
-                    AND column_name != 'index'
-                    AND column_name != 'chunk'
-                )
+            # Get all columns except index and chunk
+            self.cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = %s
+                AND column_name NOT IN ('index', 'chunk')
+                ORDER BY column_name
+            """, (self.data_table,))
+            
+            columns = [row[0] for row in self.cursor.fetchall()]
+            
+            if not columns:
+                return []
+                
+            # Build dynamic NOT NULL checks for all columns
+            column_checks = ' AND '.join(f'd3."{col}" IS NOT NULL' for col in columns)
+            
+            query = f'''
                 SELECT DISTINCT d.index, d.chunk
                 FROM "{self.data_table}" d
-                CROSS JOIN stage_columns sc
                 WHERE d.chunk IS NOT NULL
-                AND EXISTS (
-                    SELECT 1
-                    FROM "{self.data_table}" d2
-                    WHERE d2.index = d.index
-                    AND d2.chunk IS NOT NULL
-                    AND d2.chunk = d.chunk
-                    AND NOT EXISTS (
-                        SELECT 1 
-                        FROM "{self.data_table}" d3
-                        WHERE d3.index = d2.index 
-                        AND d3.chunk = d2.chunk
-                        AND d3.summary IS NOT NULL
-                        AND d3.analysis IS NOT NULL 
-                        AND d3.conclusion IS NOT NULL
-                    )
+                AND NOT EXISTS (
+                    SELECT 1 
+                    FROM "{self.data_table}" d3
+                    WHERE d3.index = d.index 
+                    AND {column_checks}
                 )
                 ORDER BY index
                 LIMIT %s
