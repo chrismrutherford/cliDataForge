@@ -1,0 +1,104 @@
+# LlamaFlow CLI Documentation
+
+LlamaFlow provides a command-line interface for managing and executing LLM processing pipelines.
+
+## Global Options
+
+These options are available for most commands:
+
+- `--data-table`: Name of data processing table (default: 'llamaFlowData')
+- `--sys-table`: Name of system prompts table (default: 'llamaFlowSystem')
+
+## Commands
+
+### process-all
+
+Process all unprocessed chunks in parallel through the pipeline.
+
+```bash
+python -m llamaflow process-all --stages "source:dest[,source:dest...]" [options]
+```
+
+Options:
+- `--api-key`: API key for LLM service (env: LLAMAFLOW_API_KEY)
+- `--base-url`: Base URL for OpenAI-compatible API (env: OPENAI_BASE_URL)
+- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
+- `--threads`: Number of parallel threads (default: 1)
+- `--stages`: Required. Comma-separated list of source:destination pairs
+
+Example:
+```bash
+python -m llamaflow process-all --stages "chunk:summary,summary:analysis,analysis:conclusion" --threads 4
+```
+
+### process-chunk
+
+Process a single unprocessed chunk through the pipeline.
+
+```bash
+python -m llamaflow process-chunk --stages "source:dest[,source:dest...]" [options]
+```
+
+Options:
+- `--api-key`: API key for LLM service (env: LLAMAFLOW_API_KEY)
+- `--base-url`: Base URL for OpenAI-compatible API (env: OPENAI_BASE_URL)
+- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
+- `--stages`: Required. Comma-separated list of source:destination pairs
+
+### insert-data
+
+Insert JSON list of text chunks into specified column.
+
+```bash
+python -m llamaflow insert-data JSON_FILE --column COLUMN [options]
+```
+
+Arguments:
+- `JSON_FILE`: Path to JSON file containing list of text chunks
+- `--column`: Required. Column name to insert data into
+
+### clear-column
+
+Clear all values in specified column (set to NULL).
+
+```bash
+python -m llamaflow clear-column --column COLUMN [options]
+```
+
+Options:
+- `--column`: Required. Column to clear
+
+### list-columns
+
+List all columns in the data table with their types.
+
+```bash
+python -m llamaflow list-columns [options]
+```
+
+## Environment Variables
+
+The following environment variables can be used:
+
+- `LLAMAFLOW_API_KEY`: API key for LLM service
+- `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API service
+- `DB_NAME`: Database name (default: 'llmdata')
+- `DB_USER`: Database user (default: 'postgres')
+- `DB_PASSWORD`: Database password
+- `DB_HOST`: Database host (default: 'localhost')
+- `DB_PORT`: Database port (default: '5432')
+
+## Pipeline Stages
+
+Pipeline stages are specified as comma-separated pairs of `source:destination` columns:
+
+- `chunk:summary`: Generate summary from input chunk
+- `summary:analysis`: Generate analysis from summary
+- `analysis:conclusion`: Generate conclusion from analysis
+
+Example pipeline specification:
+```bash
+--stages "chunk:summary,summary:analysis,analysis:conclusion"
+```
+
+Each stage's processing is guided by system prompts stored in the system prompts table.
