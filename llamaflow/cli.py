@@ -21,8 +21,13 @@ def cli():
 def process_all(api_key: str, base_url: str, model: str, threads: int, stages: str, sys_table: str, data_table: str):
     """Process all unprocessed chunks in the database"""
     try:
+        # Parse stages
+        stage_pairs = [(s.split(':')[0].strip(), s.split(':')[1].strip()) 
+                      for s in stages.split(',')]
+        
         llm = LLMClient(api_key=api_key, base_url=base_url)
-        db = DatabaseHandler(sys_table=sys_table, data_table=data_table)
+        db = DatabaseHandler(sys_table=sys_table, data_table=data_table, 
+                           pipeline_stages=stage_pairs)
         pipeline = PipelineExecutor(llm, db, stages, model=model)
         
         def process_chunk_wrapper(chunk_data):

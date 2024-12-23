@@ -6,9 +6,10 @@ from dotenv import load_dotenv
 class DatabaseHandler:
     """Handler for database operations"""
     
-    def __init__(self, sys_table: str = 'llamaFlowSystem', data_table: str = 'llamaFlowData'):
+    def __init__(self, sys_table: str = 'llamaFlowSystem', data_table: str = 'llamaFlowData', pipeline_stages=None):
         self.sys_table = sys_table
         self.data_table = data_table
+        self.pipeline_stages = pipeline_stages or []
         load_dotenv()
         self.conn = None
         self.cursor = None
@@ -215,36 +216,24 @@ class DatabaseHandler:
         """Get unprocessed chunks from the database"""
         self.connect()
         try:
-            # Get all columns except index and chunk
-            self.cursor.execute("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = %s
-                AND column_name NOT IN ('index', 'chunk')
-                ORDER BY column_name
-            """, (self.data_table,))
-            
-            columns = [row[0] for row in self.cursor.fetchall()]
+            # Get the destination columns from the pipeline stages
+            columns = [stage[1] for stage in self.pipeline_stages]
             
             if not columns:
                 return []
                 
-            # Build dynamic NOT NULL checks for all columns
-            column_checks = ' AND '.join(f'd3."{col}" IS NOT NULL' for col in columns)
+            # Build dynamic query to find rows where ANY target column is NULL
+            column_checks = ' OR '.join(f'(d."{col}" IS NULL)' for col in columns)
             
             query = f'''
                 SELECT DISTINCT d.index, d.chunk
                 FROM "{self.data_table}" d
                 WHERE d.chunk IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1 
-                    FROM "{self.data_table}" d3
-                    WHERE d3.index = d.index 
-                    AND {column_checks}
-                )
-                ORDER BY index
+                AND ({column_checks})
+                ORDER BY d.index
                 LIMIT %s
             '''
+            
             self.cursor.execute(query, (limit,))
             return self.cursor.fetchall()
         except Exception as e:

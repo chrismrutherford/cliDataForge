@@ -42,7 +42,7 @@ class PipelineExecutor:
         responses = []
         previous_response = None
         
-        print(f"\nProcessing chunk {chunk_index}")
+        print(f"\nProcessing chunk {chunk_index} at {cycle_start.strftime('%H:%M:%S')}")
         
         for source_col, dest_col in self.stages:
             print(f"\nProcessing {source_col} -> {dest_col}")
@@ -62,8 +62,8 @@ class PipelineExecutor:
                 
         # Ensure minimum cycle time
         elapsed = (datetime.now() - cycle_start).total_seconds()
-        if elapsed < 15:
-            wait_time = max(0, 15 - elapsed)
+        if elapsed < 5:
+            wait_time = max(0, 5 - elapsed)
             if wait_time > 0:
                 print(f"Waiting {wait_time:.1f} seconds to complete minimum cycle time...")
                 time.sleep(wait_time)
