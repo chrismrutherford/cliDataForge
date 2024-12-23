@@ -241,5 +241,34 @@ def list_columns(data_table: str):
     except Exception as e:
         click.echo(f"Error listing columns: {str(e)}", err=True)
 
+@cli.command(name='save-column')
+@click.argument('output_file', type=click.Path())
+@click.option('--column', required=True, help='Column to save')
+@click.option('--data-table', default='llamaFlowData', show_default=True, help='Name of data processing table')
+def save_column(output_file: str, column: str, data_table: str):
+    """Save contents of specified column to a JSON file"""
+    try:
+        db = DatabaseHandler(data_table=data_table)
+        try:
+            contents = db.get_column_contents(column)
+            if not contents:
+                click.echo(f"No data found in column '{column}'")
+                return
+                
+            import json
+            with open(output_file, 'w') as f:
+                json.dump(contents, f, indent=2)
+                
+            click.echo(f"Successfully saved {len(contents)} entries from column '{column}' to {output_file}")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
 if __name__ == '__main__':
     cli()
