@@ -102,11 +102,14 @@ package "LlamaFlow" {
         - process_all: Parallel processing
         - insert_data: Insert JSON data
         - clear_column: Clear column contents
+        - list_columns: Show column info
         Configuration:
         - API keys
         - Model selection
         - Thread count
         - Pipeline stages
+        - Table names
+        - Base URL
     end note
 
     note right of Executor
@@ -114,17 +117,24 @@ package "LlamaFlow" {
         - Multi-stage processing
         - Response validation
         - Error handling
-        - Minimum cycle time
+        - Minimum cycle time (15s)
         - Progress tracking
+        - Parallel execution
+        - Transaction management
+        - Column validation
     end note
 
     note right of LLM
         Features:
         - OpenAI client wrapper
         - Message construction
-        - Retry logic
+        - Retry logic (3 attempts)
         - Error handling
         - Response validation
+        - Custom headers
+        - Model selection
+        - Temperature control
+        - Token limits
     end note
 
     note right of DB
@@ -136,6 +146,9 @@ package "LlamaFlow" {
         - Result updates
         - Column management
         - Data insertion
+        - Column validation
+        - Table initialization
+        - Column info retrieval
     end note
 }
 

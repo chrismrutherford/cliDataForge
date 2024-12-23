@@ -1,6 +1,6 @@
 # LlamaFlow CLI Documentation
 
-LlamaFlow provides a command-line interface for managing and executing LLM processing pipelines.
+LlamaFlow provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
 
 ## Global Options
 
@@ -8,6 +8,8 @@ These options are available for most commands:
 
 - `--data-table`: Name of data processing table (default: 'llamaFlowData')
 - `--sys-table`: Name of system prompts table (default: 'llamaFlowSystem')
+- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
+- `--base-url`: Base URL for OpenAI-compatible API (default: 'https://openrouter.ai/api/v1')
 
 ## Commands
 
@@ -76,17 +78,29 @@ List all columns in the data table with their types.
 python -m llamaflow list-columns [options]
 ```
 
+Shows detailed column information including data types and maximum lengths.
+
 ## Environment Variables
 
 The following environment variables can be used:
 
 - `LLAMAFLOW_API_KEY`: API key for LLM service
-- `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API service
+- `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://openrouter.ai/api/v1')
 - `DB_NAME`: Database name (default: 'llmdata')
 - `DB_USER`: Database user (default: 'postgres')
 - `DB_PASSWORD`: Database password
 - `DB_HOST`: Database host (default: 'localhost')
 - `DB_PORT`: Database port (default: '5432')
+
+## Pipeline Features
+
+- Multi-stage processing with configurable source/destination columns
+- Parallel processing with configurable thread count
+- Automatic column creation and validation
+- Minimum cycle time enforcement (15 seconds)
+- Progress tracking and error handling
+- Retry logic for LLM API calls
+- Transaction management for database operations
 
 ## Pipeline Stages
 
@@ -102,3 +116,4 @@ Example pipeline specification:
 ```
 
 Each stage's processing is guided by system prompts stored in the system prompts table.
+The pipeline automatically manages dependencies between stages and ensures data consistency.
