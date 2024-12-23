@@ -25,7 +25,9 @@ class PipelineExecutor:
         """Process a single stage of the pipeline"""
         system_prompt = self.db.get_system_prompt(dest_col)
         if not system_prompt:
-            raise ValueError(f"No system prompt found for destination column {dest_col}")
+            print(f"\nFATAL ERROR: No system prompt found for destination column {dest_col}")
+            print("Please ensure system prompts are configured in the system table before running the pipeline.")
+            exit(1)
             
         messages = self.llm.build_messages(prompt, system_prompt, previous_response)
         response = self.llm.complete(messages, model=self.model)
@@ -64,31 +66,43 @@ class PipelineExecutor:
         print(f"Pipeline processing complete (total time: {elapsed:.1f}s)")
         return responses
     def validate_pipeline_columns(self):
-        """Validate that all pipeline columns exist and are spelled correctly"""
+        """Validate pipeline columns and create any missing destination columns"""
         # Get list of actual columns from database
         actual_columns = self.db.get_column_names()
         
         for source, dest in self.stages:
             # Skip validation for 'chunk' as it's a special source column
-            if source != 'chunk' and source.lower() not in [col.lower() for col in actual_columns]:
+            if source != 'chunk' and source not in actual_columns:
                 closest = self.find_closest_match(source, actual_columns)
                 suggestion = f" Did you mean '{closest}'?" if closest else ""
                 raise ValueError(f"Source column '{source}' does not exist.{suggestion}")
-                
-            if dest.lower() not in [col.lower() for col in actual_columns]:
-                closest = self.find_closest_match(dest, actual_columns)
-                suggestion = f" Did you mean '{closest}'?" if closest else ""
-                raise ValueError(f"Destination column '{dest}' does not exist.{suggestion}")
+            
+            # Create destination column if it doesn't exist
+            if dest not in actual_columns:
+                self.db.validate_columns(self.stages)
+                # Refresh column list after creation
+                actual_columns = self.db.get_column_names()
                 
     def find_closest_match(self, target: str, options: List[str]) -> Optional[str]:
-        """Find the closest matching column name using Levenshtein distance"""
-        import Levenshtein
-        
+        """Find the closest matching column name using simple string matching"""
         if not options:
             return None
             
-        distances = [(opt, Levenshtein.distance(target.lower(), opt.lower())) for opt in options]
-        closest = min(distances, key=lambda x: x[1])
-        
-        # Only suggest if the distance is small enough
-        return closest[0] if closest[1] <= 3 else None
+        target = target.lower()
+        # First try exact match
+        for opt in options:
+            if opt.lower() == target:
+                return opt
+                
+        # Then try contains
+        contains_matches = [opt for opt in options if target in opt.lower() or opt.lower() in target]
+        if contains_matches:
+            return contains_matches[0]
+            
+        # Finally try prefix/suffix matching
+        for opt in options:
+            opt_lower = opt.lower()
+            if opt_lower.startswith(target) or opt_lower.endswith(target):
+                return opt
+                
+        return None

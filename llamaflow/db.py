@@ -85,26 +85,43 @@ class DatabaseHandler:
         """Validate that all required columns exist in llamaFlowData"""
         self.connect()
         try:
-            # Get existing columns
+            # Get existing columns with exact names
             self.cursor.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
-                WHERE table_name = %s
-            """, (self.data_table.lower(),))
+                WHERE table_schema = 'public'
+                AND table_name = %s
+            """, (self.data_table,))
             existing_columns = {row[0] for row in self.cursor.fetchall()}
             
+            # Create table if it doesn't exist
+            if not existing_columns:
+                self.cursor.execute(f'''
+                    CREATE TABLE "{self.data_table}" (
+                        index SERIAL PRIMARY KEY,
+                        chunk TEXT
+                    )
+                ''')
+                self.conn.commit()
+                existing_columns = {'index', 'chunk'}
+
             # Check each destination column
             for _, dest_col in stages:
-                try:
-                    if dest_col.lower() not in {col.lower() for col in existing_columns}:
+                if dest_col not in existing_columns:
+                    try:
                         # Add column if it doesn't exist
                         self.cursor.execute(f'ALTER TABLE "{self.data_table}" ADD COLUMN "{dest_col}" TEXT')
                         self.conn.commit()
-                except psycopg2.Error as e:
-                    if 'already exists' not in str(e):
+                        existing_columns.add(dest_col)
+                    except psycopg2.Error as e:
+                        # If column already exists, just continue
+                        if 'already exists' in str(e):
+                            self.conn.rollback()
+                            existing_columns.add(dest_col)
+                            continue
+                        # For other errors, rollback and raise
                         self.conn.rollback()
                         raise e
-                    self.conn.rollback()
                     
             self.conn.commit()
         except Exception as e:
@@ -227,6 +244,10 @@ class DatabaseHandler:
         """Get unprocessed chunks from the database"""
         self.connect()
         try:
+            # First validate/create all needed columns
+            if self.pipeline_stages:
+                self.validate_columns(self.pipeline_stages)
+
             # Get the destination columns from the pipeline stages
             columns = [stage[1] for stage in self.pipeline_stages]
             
@@ -234,13 +255,27 @@ class DatabaseHandler:
                 return []
                 
             # Build dynamic query to find rows where ANY target column is NULL
-            column_checks = ' OR '.join(f'(d."{col}" IS NULL)' for col in columns)
+            column_checks = []
+            for col in columns:
+                # Verify column exists before adding to query
+                self.cursor.execute("""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = 'public'
+                    AND table_name = %s
+                    AND column_name = %s
+                """, (self.data_table, col))
+                if self.cursor.fetchone():
+                    column_checks.append(f'(d."{col}" IS NULL)')
             
+            if not column_checks:
+                return []
+                
             query = f'''
                 SELECT DISTINCT d.index, d.chunk
                 FROM "{self.data_table}" d
                 WHERE d.chunk IS NOT NULL
-                AND ({column_checks})
+                AND ({' OR '.join(column_checks)})
                 ORDER BY d.index
                 LIMIT %s
             '''
