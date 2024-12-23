@@ -278,16 +278,8 @@ def delete_column(column: str, data_table: str):
     try:
         db = DatabaseHandler(data_table=data_table)
         try:
-            contents = db.get_column_contents(column)
-            if not contents:
-                click.echo(f"No data found in column '{column}'")
-                return
-                
-            import json
-            with open(output_file, 'w') as f:
-                json.dump(contents, f, indent=2)
-                
-            click.echo(f"Successfully saved {len(contents)} entries from column '{column}' to {output_file}")
+            db.delete_column(column)
+            click.echo(f"Successfully deleted column '{column}'")
                 
         except ValueError as ve:
             click.echo(f"Error: {str(ve)}", err=True)
