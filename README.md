@@ -4,7 +4,7 @@ LlamaFlow provides a command-line interface for managing and executing LLM proce
 
 ## Architecture
 
-![LlamaFlow Architecture](LlamaFlow%20Architecture.png)
+![LlamaFlow Architecture](LlamaFlowArchitecture.png)
 
 ## Global Options
 
