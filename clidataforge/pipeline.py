@@ -65,7 +65,7 @@ class PipelineExecutor:
             print(f"\nProcessing {source_col} -> {dest_col}")
             try:
                 # For first stage, use initial prompt. For subsequent stages, use previous response
-                current_prompt = initial_prompt if source_col == 'chunk' else None
+                current_prompt = initial_prompt if len(responses) == 0 else None
                 response = self.process_stage(chunk_index, source_col, dest_col, current_prompt, previous_response)
                 
                 print(f"Response from {dest_col} length: {len(str(response))} chars")
