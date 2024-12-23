@@ -2,6 +2,10 @@
 
 LlamaFlow provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
 
+## Architecture
+
+![LlamaFlow Architecture](LlamaFlow%20Architecture.png)
+
 ## Global Options
 
 These options are available for most commands:
