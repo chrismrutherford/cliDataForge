@@ -7,7 +7,7 @@ import os
 
 @click.group()
 def cli():
-    """LlamaFlow - Pipeline processing with LLMs"""
+    """cliDataForge - Pipeline processing with LLMs"""
     pass
 
 @cli.command(name='process-all')

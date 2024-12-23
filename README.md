@@ -1,10 +1,10 @@
-# LlamaFlow CLI Documentation
+# cliDataForge CLI Documentation
 
-LlamaFlow provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
+cliDataForge provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
 
 ## Architecture
 
-![LlamaFlow Architecture](LlamaFlowArchitecture.png)
+![cliDataForge Architecture](cliDataForgeArchitecture.png)
 
 ## Global Options
 

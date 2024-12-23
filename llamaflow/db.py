@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 class DatabaseHandler:
     """Handler for database operations"""
     
-    def __init__(self, sys_table: str = 'llamaFlowSystem', data_table: str = 'llamaFlowData', pipeline_stages=None):
+    def __init__(self, sys_table: str = 'cliDataForgeSystem', data_table: str = 'cliDataForgeData', pipeline_stages=None):
         self.sys_table = sys_table
         self.data_table = data_table
         self.pipeline_stages = pipeline_stages or []
