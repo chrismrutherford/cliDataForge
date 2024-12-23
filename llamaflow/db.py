@@ -198,6 +198,17 @@ class DatabaseHandler:
             # Use the actual column name from the database
             actual_column = result[0]
             
+            # First verify the column exists and has data
+            self.cursor.execute(f"""
+                SELECT COUNT(*) 
+                FROM "{self.data_table}" 
+                WHERE "{actual_column}" IS NOT NULL
+            """)
+            existing_rows = self.cursor.fetchone()[0]
+            
+            if existing_rows == 0:
+                raise ValueError(f"Column '{column}' exists but contains no data to clear")
+            
             # Clear the column using actual case-sensitive name
             self.cursor.execute(f"""
                 UPDATE "{self.data_table}" 
@@ -238,4 +249,18 @@ class DatabaseHandler:
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error fetching unprocessed chunks: {e}")
+            return []
+    def get_column_names(self) -> List[str]:
+        """Get list of column names from the data table"""
+        self.connect()
+        try:
+            self.cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = %s
+                ORDER BY ordinal_position
+            """, (self.data_table,))
+            return [row[0] for row in self.cursor.fetchall()]
+        except Exception as e:
+            print(f"Error getting column names: {e}")
             return []

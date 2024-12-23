@@ -30,29 +30,55 @@ def process_all(api_key: str, base_url: str, model: str, threads: int, stages: s
                            pipeline_stages=stage_pairs)
         pipeline = PipelineExecutor(llm, db, stages, model=model)
         
+        import time
+        from datetime import datetime
+        
         def process_chunk_wrapper(chunk_data):
             chunk_index, prompt = chunk_data
+            start_time = datetime.now()
             try:
                 responses = pipeline.execute_pipeline(chunk_index, prompt)
-                click.echo(f"Successfully processed chunk {chunk_index}")
+                duration = (datetime.now() - start_time).total_seconds()
+                click.echo(f"Successfully processed chunk {chunk_index} in {duration:.1f}s")
                 return True
             except Exception as e:
-                click.echo(f"Error processing chunk {chunk_index}: {str(e)}", err=True)
+                duration = (datetime.now() - start_time).total_seconds()
+                click.echo(f"Error processing chunk {chunk_index} after {duration:.1f}s: {str(e)}", err=True)
                 return False
 
-        with ThreadPoolExecutor(max_workers=threads) as executor:
-            while True:
-                chunks = db.get_unprocessed_chunks(limit=threads)
+        total_start = datetime.now()
+        total_chunks = 0
+        total_successful = 0
+
+        while True:
+            with ThreadPoolExecutor(max_workers=threads) as executor:
+                batch_start = datetime.now()
+                chunks = db.get_unprocessed_chunks(limit=threads * 2)  # Get more chunks to keep threads busy
                 if not chunks:
-                    click.echo("No more chunks to process")
                     break
+
+                # Submit all chunks to thread pool at once
+                futures = [executor.submit(process_chunk_wrapper, chunk) for chunk in chunks]
                 
-                # Process chunks in parallel
-                results = list(executor.map(process_chunk_wrapper, chunks))
+                # Process results as they complete
+                for future in futures:
+                    result = future.result()
+                    total_chunks += 1
+                    if result:
+                        total_successful += 1
                 
-                # Report overall progress
-                successful = sum(1 for r in results if r)
-                click.echo(f"Processed batch: {successful}/{len(chunks)} successful")
+                batch_duration = (datetime.now() - batch_start).total_seconds()
+                click.echo(f"\nBatch complete: {total_successful}/{total_chunks} successful in {batch_duration:.1f}s")
+                if total_chunks > 0:
+                    click.echo(f"Average time per chunk: {batch_duration/total_chunks:.1f}s")
+
+        total_duration = (datetime.now() - total_start).total_seconds()
+        click.echo("\nProcessing complete!")
+        click.echo(f"Total chunks processed: {total_chunks}")
+        click.echo(f"Total successful: {total_successful}")
+        click.echo(f"Total time: {total_duration:.1f}s")
+        if total_chunks > 0:
+            click.echo(f"Average time per chunk: {total_duration/total_chunks:.1f}s")
             
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
@@ -125,8 +151,14 @@ def clear_column(column: str, data_table: str):
     """Clear all values in specified column (set to NULL)"""
     try:
         db = DatabaseHandler(data_table=data_table)
-        rows_affected = db.clear_column(column)
-        click.echo(f"Successfully cleared {rows_affected} rows in column '{column}'")
+        try:
+            rows_affected = db.clear_column(column)
+            if rows_affected > 0:
+                click.echo(f"Successfully cleared {rows_affected} rows in column '{column}'")
+            else:
+                click.echo(f"No data was cleared from column '{column}'")
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
             
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
