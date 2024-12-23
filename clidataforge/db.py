@@ -317,7 +317,8 @@ class DatabaseHandler:
                 LIMIT %s
             '''
             
-            print(f"\nExecuting query:\n{query}\nwith limit={limit}")
+            # Print the actual SQL that will be executed with parameters substituted
+            print(f"\nExecuting query:\n{self.cursor.mogrify(query, (limit,)).decode()}")
             self.cursor.execute(query, (limit,))
             results = self.cursor.fetchall()
             print(f"Query returned {len(results)} results")
