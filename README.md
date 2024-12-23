@@ -10,8 +10,8 @@ cliDataForge provides a command-line interface for managing and executing LLM pr
 
 These options are available for most commands:
 
-- `--data-table`: Name of data processing table (default: 'llamaFlowData')
-- `--sys-table`: Name of system prompts table (default: 'llamaFlowSystem')
+- `--data-table`: Name of data processing table (default: 'cliDataForgeData')
+- `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
 - `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
 - `--base-url`: Base URL for OpenAI-compatible API (default: 'https://openrouter.ai/api/v1')
 
@@ -22,7 +22,7 @@ These options are available for most commands:
 Save contents of specified column to a JSON file.
 
 ```bash
-python -m llamaflow save-column OUTPUT_FILE --column COLUMN [options]
+python -m clidataforge save-column OUTPUT_FILE --column COLUMN [options]
 ```
 
 Arguments:
@@ -34,7 +34,7 @@ Arguments:
 Show the system prompt for a specific processing stage.
 
 ```bash
-python -m llamaflow show-prompt STAGE [options]
+python -m clidataforge show-prompt STAGE [options]
 ```
 
 Arguments:
@@ -45,7 +45,7 @@ Arguments:
 Add or update system prompt for a processing stage from a file.
 
 ```bash
-python -m llamaflow add-prompt STAGE PROMPT_FILE [options]
+python -m clidataforge add-prompt STAGE PROMPT_FILE [options]
 ```
 
 Arguments:
@@ -57,7 +57,7 @@ Arguments:
 Delete the system prompt for a specific processing stage.
 
 ```bash
-python -m llamaflow delete-prompt STAGE [options]
+python -m clidataforge delete-prompt STAGE [options]
 ```
 
 Arguments:
@@ -68,7 +68,7 @@ Arguments:
 Delete a column from the data table.
 
 ```bash
-python -m llamaflow delete-column --column COLUMN [options]
+python -m clidataforge delete-column --column COLUMN [options]
 ```
 
 Options:
@@ -79,11 +79,11 @@ Options:
 Process all unprocessed chunks in parallel through the pipeline.
 
 ```bash
-python -m llamaflow process-all --stages "source:dest[,source:dest...]" [options]
+python -m clidataforge process-all --stages "source:dest[,source:dest...]" [options]
 ```
 
 Options:
-- `--api-key`: API key for LLM service (env: LLAMAFLOW_API_KEY)
+- `--api-key`: API key for LLM service (env: CLIDATAFORGE_API_KEY)
 - `--base-url`: Base URL for OpenAI-compatible API (env: OPENAI_BASE_URL)
 - `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
 - `--threads`: Number of parallel threads (default: 1)
@@ -91,7 +91,7 @@ Options:
 
 Example:
 ```bash
-python -m llamaflow process-all --stages "chunk:summary,summary:analysis,analysis:conclusion" --threads 4
+python -m clidataforge process-all --stages "chunk:summary,summary:analysis,analysis:conclusion" --threads 4
 ```
 
 ### process-chunk
@@ -99,7 +99,7 @@ python -m llamaflow process-all --stages "chunk:summary,summary:analysis,analysi
 Process a single unprocessed chunk through the pipeline.
 
 ```bash
-python -m llamaflow process-chunk --stages "source:dest[,source:dest...]" [options]
+python -m clidataforge process-chunk --stages "source:dest[,source:dest...]" [options]
 ```
 
 Options:
@@ -113,7 +113,7 @@ Options:
 Insert JSON list of text chunks into specified column.
 
 ```bash
-python -m llamaflow insert-data JSON_FILE --column COLUMN [options]
+python -m clidataforge insert-data JSON_FILE --column COLUMN [options]
 ```
 
 Arguments:
@@ -125,7 +125,7 @@ Arguments:
 Clear all values in specified column (set to NULL).
 
 ```bash
-python -m llamaflow clear-column --column COLUMN [options]
+python -m clidataforge clear-column --column COLUMN [options]
 ```
 
 Options:
@@ -136,7 +136,7 @@ Options:
 List all columns in the data table with their types.
 
 ```bash
-python -m llamaflow list-columns [options]
+python -m clidataforge list-columns [options]
 ```
 
 Shows detailed column information including data types and maximum lengths.
@@ -145,7 +145,7 @@ Shows detailed column information including data types and maximum lengths.
 
 The following environment variables can be used:
 
-- `LLAMAFLOW_API_KEY`: API key for LLM service
+- `CLIDATAFORGE_API_KEY`: API key for LLM service
 - `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://openrouter.ai/api/v1')
 - `DB_NAME`: Database name (default: 'llmdata')
 - `DB_USER`: Database user (default: 'postgres')
