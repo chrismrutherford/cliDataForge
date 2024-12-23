@@ -290,13 +290,16 @@ class DatabaseHandler:
             if not column_checks:
                 return []
                 
-            # Use first stage's source column
+            # Handle source column logic
             source_col = self.pipeline_stages[0][0] if self.pipeline_stages else columns[0]
             
+            # Special handling for 'chunk' as source column
+            source_check = 'TRUE' if source_col == 'chunk' else f'd."{source_col}" IS NOT NULL'
+            
             query = f'''
-                SELECT DISTINCT d.index, d."{source_col}"
+                SELECT DISTINCT d.index, COALESCE(d.chunk, '') as chunk
                 FROM "{self.data_table}" d
-                WHERE d."{source_col}" IS NOT NULL
+                WHERE {source_check}
                 AND ({' OR '.join(column_checks)})
                 ORDER BY d.index
                 LIMIT %s
