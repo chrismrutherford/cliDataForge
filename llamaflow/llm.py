@@ -63,6 +63,6 @@ class LLMClient:
             except Exception as e:
                 print(f"Error in completion (attempt {attempt + 1}/{max_retries}): {str(e)}")
                 if attempt < max_retries - 1:
-                    time.sleep(5)
+                    time.sleep(1)
                     
         return f"Error: Maximum retries ({max_retries}) exceeded"
