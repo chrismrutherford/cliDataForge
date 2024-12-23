@@ -382,11 +382,10 @@ def list_prompts(sys_table: str):
             prompts = db.get_all_prompts()
             if prompts:
                 click.echo("\nAvailable system prompts:")
-                for stage, prompt in prompts:
-                    click.echo(f"\nStage: {stage}")
-                    click.echo("-" * 40)
-                    click.echo(prompt)
-                    click.echo("-" * 40)
+                click.echo("-" * 25)
+                for stage, _ in sorted(prompts):
+                    click.echo(f"| {stage:<20} |")
+                click.echo("-" * 25)
             else:
                 click.echo("No system prompts found")
                 
