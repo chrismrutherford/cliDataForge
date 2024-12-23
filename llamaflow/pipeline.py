@@ -71,8 +71,7 @@ class PipelineExecutor:
         actual_columns = self.db.get_column_names()
         
         for source, dest in self.stages:
-            # Skip validation for 'chunk' as it's a special source column
-            if source != 'chunk' and source not in actual_columns:
+            if source not in actual_columns:
                 closest = self.find_closest_match(source, actual_columns)
                 suggestion = f" Did you mean '{closest}'?" if closest else ""
                 raise ValueError(f"Source column '{source}' does not exist.{suggestion}")

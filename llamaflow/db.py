@@ -48,7 +48,7 @@ class DatabaseHandler:
                 self.cursor.execute(f'''
                     CREATE TABLE "{self.data_table}" (
                         index SERIAL PRIMARY KEY,
-                        chunk TEXT NOT NULL
+                        chunk TEXT
                     )
                 ''')
                 
@@ -161,7 +161,7 @@ class DatabaseHandler:
         """Insert chunks into specified column if empty"""
         self.connect()
         try:
-            # Verify column exists
+            # Add column if it doesn't exist
             self.cursor.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
@@ -170,10 +170,14 @@ class DatabaseHandler:
             
             result = self.cursor.fetchone()
             if not result:
-                raise ValueError(f"Column '{column}' does not exist in table '{self.data_table}'")
+                self.cursor.execute(f"""
+                    ALTER TABLE "{self.data_table}" 
+                    ADD COLUMN "{column}" TEXT
+                """)
+                self.conn.commit()
                 
             # Use the actual column name from the database
-            actual_column = result[0]
+            actual_column = column
             
             # Check if column is empty
             self.cursor.execute(f"""
@@ -272,9 +276,9 @@ class DatabaseHandler:
                 return []
                 
             query = f'''
-                SELECT DISTINCT d.index, d.chunk
+                SELECT DISTINCT d.index, d."{columns[0]}"
                 FROM "{self.data_table}" d
-                WHERE d.chunk IS NOT NULL
+                WHERE d."{columns[0]}" IS NOT NULL
                 AND ({' OR '.join(column_checks)})
                 ORDER BY d.index
                 LIMIT %s
@@ -315,7 +319,7 @@ class DatabaseHandler:
                 raise ValueError(f"Column '{column}' does not exist in table '{self.data_table}'")
             
             # Don't allow deletion of essential columns
-            if column.lower() in ['index', 'chunk']:
+            if column.lower() == 'index':
                 raise ValueError(f"Cannot delete essential column '{column}'")
             
             # Drop the column
@@ -330,6 +334,51 @@ class DatabaseHandler:
         except Exception as e:
             self.conn.rollback()
             raise Exception(f"Error deleting column: {str(e)}")
+            
+    def delete_system_prompt(self, stage: str) -> bool:
+        """Delete a system prompt from the system table"""
+        self.connect()
+        try:
+            # Verify prompt exists
+            self.cursor.execute(f"""
+                SELECT stage FROM "{self.sys_table}"
+                WHERE stage = %s
+            """, (stage,))
+            
+            if not self.cursor.fetchone():
+                raise ValueError(f"No prompt found for stage '{stage}'")
+            
+            # Delete the prompt
+            self.cursor.execute(f"""
+                DELETE FROM "{self.sys_table}"
+                WHERE stage = %s
+            """, (stage,))
+            
+            self.conn.commit()
+            return True
+            
+        except Exception as e:
+            self.conn.rollback()
+            raise Exception(f"Error deleting prompt: {str(e)}")
+            
+    def set_system_prompt(self, stage: str, prompt: str) -> bool:
+        """Add or update a system prompt in the system table"""
+        self.connect()
+        try:
+            # Insert or update the prompt
+            self.cursor.execute(f"""
+                INSERT INTO "{self.sys_table}" (stage, prompt)
+                VALUES (%s, %s)
+                ON CONFLICT (stage) 
+                DO UPDATE SET prompt = EXCLUDED.prompt
+            """, (stage, prompt))
+            
+            self.conn.commit()
+            return True
+            
+        except Exception as e:
+            self.conn.rollback()
+            raise Exception(f"Error setting prompt: {str(e)}")
             
     def get_column_contents(self, column: str) -> List[str]:
         """Get contents of specified column as a list"""

@@ -270,6 +270,80 @@ def save_column(output_file: str, column: str, data_table: str):
         if 'db' in locals():
             db.disconnect()
 
+@cli.command(name='show-prompt')
+@click.argument('stage')
+@click.option('--sys-table', default='llamaFlowSystem', show_default=True, help='Name of system prompts table')
+def show_prompt(stage: str, sys_table: str):
+    """Show the system prompt for a specific processing stage"""
+    try:
+        db = DatabaseHandler(sys_table=sys_table)
+        try:
+            prompt = db.get_system_prompt(stage)
+            if prompt:
+                click.echo(f"\nSystem prompt for stage '{stage}':")
+                click.echo("-" * 40)
+                click.echo(prompt)
+                click.echo("-" * 40)
+            else:
+                click.echo(f"No system prompt found for stage '{stage}'")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
+@cli.command(name='add-prompt')
+@click.argument('stage')
+@click.argument('prompt_file', type=click.Path(exists=True))
+@click.option('--sys-table', default='llamaFlowSystem', show_default=True, help='Name of system prompts table')
+def add_prompt(stage: str, prompt_file: str, sys_table: str):
+    """Add or update system prompt for a processing stage from a file"""
+    try:
+        with open(prompt_file, 'r') as f:
+            prompt_text = f.read().strip()
+            
+        if not prompt_text:
+            click.echo("Error: Prompt file is empty", err=True)
+            return
+            
+        db = DatabaseHandler(sys_table=sys_table)
+        try:
+            db.set_system_prompt(stage, prompt_text)
+            click.echo(f"Successfully added/updated prompt for stage '{stage}'")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
+@cli.command(name='delete-prompt')
+@click.argument('stage')
+@click.option('--sys-table', default='llamaFlowSystem', show_default=True, help='Name of system prompts table')
+def delete_prompt(stage: str, sys_table: str):
+    """Delete the system prompt for a specific processing stage"""
+    try:
+        db = DatabaseHandler(sys_table=sys_table)
+        try:
+            db.delete_system_prompt(stage)
+            click.echo(f"Successfully deleted prompt for stage '{stage}'")
+                
+        except ValueError as ve:
+            click.echo(f"Error: {str(ve)}", err=True)
+            
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+    finally:
+        if 'db' in locals():
+            db.disconnect()
+
 @cli.command(name='delete-column')
 @click.option('--column', required=True, help='Column to delete')
 @click.option('--data-table', default='llamaFlowData', show_default=True, help='Name of data processing table')
