@@ -69,7 +69,7 @@ class LLMClient:
             try:
                 completion = self.client.chat.completions.create(
                     extra_headers=self.extra_headers,
-                    model="deepseek-chat",
+                    model=model,
                     messages=messages,
                     temperature=1.2,
                     max_tokens=8192,
