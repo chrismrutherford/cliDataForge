@@ -1,0 +1,165 @@
+@startuml LlamaFlow Architecture
+
+' Java styling
+skinparam defaultFontName SansSerif
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam stereotypeCBackgroundColor white
+skinparam packageStyle rectangle
+
+' Java-specific styling
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2C3E50
+    BorderColor #2C3E50
+}
+
+skinparam component {
+    BackgroundColor white
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+}
+
+skinparam interface {
+    BackgroundColor white
+    BorderColor #2C3E50
+}
+
+skinparam note {
+    BackgroundColor #FEFECE
+    BorderColor #2C3E50
+}
+
+skinparam database {
+    BackgroundColor white
+    BorderColor #2C3E50
+}
+
+package "LlamaFlow" {
+    package "CLI Layer" {
+        [Command Line Interface] as CLI
+        interface "process_chunk" as PC
+        interface "process_all" as PA
+        interface "insert_data" as ID
+        interface "clear_column" as CC
+        interface "save_column" as SC
+        interface "show_prompt" as SP
+        interface "add_prompt" as AP
+        interface "delete_prompt" as DP
+        interface "delete_column" as DC
+        CLI --> PC
+        CLI --> PA
+        CLI --> ID
+        CLI --> CC
+        CLI --> SC
+        CLI --> SP
+        CLI --> AP
+        CLI --> DP
+        CLI --> DC
+    }
+
+    package "Core" {
+        [Pipeline Executor] as Executor
+        [ThreadPoolExecutor] as TPE
+        
+        package "LLM Module" {
+            [LLM Client] as LLM
+            [Message Builder] as MB
+            [Retry Handler] as RH
+            LLM --> MB
+            LLM --> RH
+        }
+        
+        package "Database Module" {
+            [Database Handler] as DB
+            [Connection Manager] as CM
+            [Query Executor] as QE
+            DB --> CM
+            DB --> QE
+        }
+    }
+
+    database "PostgreSQL" {
+        frame "Tables" {
+            [llamaFlowSystem\n(System Prompts)] as SysTable
+            [llamaFlowData\n(Processing Data)] as DataTable
+        }
+    }
+
+    interface "OpenRouter API" as LLMAPI
+    interface "Environment\nVariables" as ENV
+
+    ' Main Flow
+    PC --> Executor
+    PA --> TPE
+    TPE --> Executor
+    Executor --> LLM : "Send Prompts"
+    Executor --> DB : "Data Operations"
+    
+    ' Database Connections
+    DB --> SysTable : "Read Prompts"
+    DB --> DataTable : "Read/Write Data"
+    ENV --> DB : "Connection Config"
+    
+    ' LLM Connections
+    LLM --> LLMAPI : "API Requests"
+    ENV --> LLM : "API Keys"
+
+    note right of CLI
+        Commands:
+        - process_chunk: Single chunk processing
+        - process_all: Parallel processing
+        - insert_data: Insert JSON data
+        - clear_column: Clear column contents
+        - list_columns: Show column info
+        Configuration:
+        - API keys
+        - Model selection
+        - Thread count
+        - Pipeline stages
+        - Table names
+        - Base URL
+    end note
+
+    note right of Executor
+        Pipeline Features:
+        - Multi-stage processing
+        - Response validation
+        - Error handling
+        - Minimum cycle time (15s)
+        - Progress tracking
+        - Parallel execution
+        - Transaction management
+        - Column validation
+    end note
+
+    note right of LLM
+        Features:
+        - OpenAI client wrapper
+        - Message construction
+        - Retry logic (3 attempts)
+        - Error handling
+        - Response validation
+        - Custom headers
+        - Model selection
+        - Temperature control
+        - Token limits
+    end note
+
+    note right of DB
+        Operations:
+        - Connection pooling
+        - Transaction management
+        - System prompt retrieval
+        - Chunk processing status
+        - Result updates
+        - Column management
+        - Data insertion
+        - Column validation
+        - Table initialization
+        - Column info retrieval
+    end note
+}
+
+@enduml
