@@ -28,10 +28,11 @@ The pipeline automatically manages dependencies between stages and ensures data 
 
 These options are available for most commands:
 
-- `--data-table`: Name of data processing table (default: 'cliDataForgeData')
 - `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
 - `--model`: Model to use (default: 'deepseek-chat')
 - `--base-url`: Base URL for OpenAI-compatible API (default: 'https://api.deepseek.com')
+
+Note: Most commands require a table name as their first argument. This is a required positional argument, not an option.
 
 ## Commands
 
