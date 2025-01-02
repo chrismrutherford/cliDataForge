@@ -30,8 +30,8 @@ These options are available for most commands:
 
 - `--data-table`: Name of data processing table (default: 'cliDataForgeData')
 - `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
-- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
-- `--base-url`: Base URL for OpenAI-compatible API (default: 'https://openrouter.ai/api/v1')
+- `--model`: Model to use (default: 'deepseek-chat')
+- `--base-url`: Base URL for OpenAI-compatible API (default: 'https://api.deepseek.com')
 
 ## Commands
 
@@ -40,7 +40,7 @@ These options are available for most commands:
 Save contents of specified column to a JSON file.
 
 ```bash
-python -m clidataforge save-column OUTPUT_FILE --column COLUMN [options]
+python -m clidataforge save-column TABLE_NAME OUTPUT_FILE --column COLUMN [options]
 ```
 
 Arguments:
@@ -52,7 +52,7 @@ Arguments:
 Show the system prompt for a specific processing stage.
 
 ```bash
-python -m clidataforge show-prompt STAGE [options]
+python -m clidataforge show-prompt TABLE_NAME STAGE [options]
 ```
 
 Arguments:
@@ -63,7 +63,10 @@ Arguments:
 Add or update system prompt for a processing stage from a file.
 
 ```bash
-python -m clidataforge add-prompt STAGE PROMPT_FILE [options]
+python -m clidataforge add-prompt TABLE_NAME STAGE PROMPT [options]
+
+Options:
+- `--from-file`: Treat prompt argument as a file path
 ```
 
 Arguments:
@@ -75,7 +78,7 @@ Arguments:
 Delete the system prompt for a specific processing stage.
 
 ```bash
-python -m clidataforge delete-prompt STAGE [options]
+python -m clidataforge delete-prompt TABLE_NAME STAGE [options]
 ```
 
 Arguments:
@@ -86,7 +89,7 @@ Arguments:
 Delete a column from the data table.
 
 ```bash
-python -m clidataforge delete-column --column COLUMN [options]
+python -m clidataforge delete-column TABLE_NAME --column COLUMN [options]
 ```
 
 Options:
@@ -163,8 +166,8 @@ Shows detailed column information including data types and maximum lengths.
 
 The following environment variables can be used:
 
-- `CLIDATAFORGE_API_KEY`: API key for LLM service
-- `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://openrouter.ai/api/v1')
+- `CLI_DF_API_KEY`: API key for LLM service
+- `CLI_DF_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://api.deepseek.com')
 - `DB_NAME`: Database name (default: 'llmdata')
 - `DB_USER`: Database user (default: 'postgres')
 - `DB_PASSWORD`: Database password
