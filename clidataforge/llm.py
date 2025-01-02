@@ -59,9 +59,11 @@ class LLMClient:
         return messages
 
     def complete(self, messages: List[Dict[str, str]], 
-                #model: str = "meta-llama/llama-3.3-70b-instruct",
-                model: str = "deepseek-chat",
+                model: str = None,
                 max_retries: int = 3) -> str:
+        """Send a completion request to the LLM with retry logic"""
+        # Use environment variable if model not specified
+        model = model or os.getenv("CLI_DF_MODEL", "deepseek-chat")
         """Send a completion request to the LLM with retry logic"""
         for attempt in range(max_retries):
             try:

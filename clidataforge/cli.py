@@ -29,7 +29,7 @@ def cli():
 @click.argument('table_name')
 @click.option('--api-key', envvar='CLI_DF_API_KEY', help='API key for LLM service')
 @click.option('--base-url', envvar='CLI_DF_BASE_URL', help='Base URL for OpenAI-compatible API service')
-@click.option('--model', default='meta-llama/llama-3.3-70b-instruct', help='Model to use')
+@click.option('--model', envvar='CLI_DF_MODEL', default='deepseek-chat', help='Model to use (env: CLI_DF_MODEL)')
 @click.option('--threads', default=1, type=int, help='Number of parallel threads (default: 1)')
 @click.option('--stages', required=True, help='Comma-separated list of source:destination column pairs (e.g. chunk:summary,summary:analysis)')
 @click.option('--sys-table', default='cliDataForgeSystem', show_default=True, help='Name of system prompts table')

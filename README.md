@@ -168,6 +168,7 @@ The following environment variables can be used:
 
 - `CLI_DF_API_KEY`: API key for LLM service
 - `CLI_DF_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://api.deepseek.com')
+- `CLI_DF_MODEL`: Model to use for completions (default: 'deepseek-chat')
 - `DB_NAME`: Database name (default: 'llmdata')
 - `DB_USER`: Database user (default: 'postgres')
 - `DB_PASSWORD`: Database password
