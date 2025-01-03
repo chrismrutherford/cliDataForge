@@ -478,10 +478,10 @@ def list_prompts(table_name: str, sys_table: str):
 @cli.command(name='create-column')
 @click.argument('table_name')
 @click.option('--column', required=True, help='Column name to create')
-def create_column(column: str):
+def create_column(table_name: str, column: str):
     """Create a new TEXT column in the table"""
     try:
-        db = DatabaseHandler()
+        db = DatabaseHandler(data_table=table_name)
         try:
             db.create_column(column)
             click.echo(f"Successfully created column '{column}'")
