@@ -498,7 +498,7 @@ def create_column(table_name: str, column: str):
 @cli.command(name='delete-column')
 @click.argument('table_name')
 @click.option('--column', required=True, help='Column to delete')
-def delete_column(column: str):
+def delete_column(table_name: str, column: str):
     """Completely remove specified column from the table"""
     try:
         db = DatabaseHandler()
