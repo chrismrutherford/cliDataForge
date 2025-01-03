@@ -501,7 +501,7 @@ def create_column(table_name: str, column: str):
 def delete_column(table_name: str, column: str):
     """Completely remove specified column from the table"""
     try:
-        db = DatabaseHandler()
+        db = DatabaseHandler(data_table=table_name)
         try:
             db.delete_column(column)
             click.echo(f"Successfully deleted column '{column}'")
