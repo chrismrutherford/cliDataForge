@@ -630,25 +630,21 @@ class DatabaseHandler:
         """Get contents of specified column as a list"""
         self.connect()
         try:
-            # Verify column exists
-            self.cursor.execute("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = %s AND column_name = %s
-            """, (self.data_table, column))
-            
-            if not self.cursor.fetchone():
-                raise ValueError(f"Column '{column}' does not exist in table '{self.data_table}'")
-            
-            # Fetch non-null values from the column
-            self.cursor.execute(f"""
+            # Directly try to fetch values from the column
+            print(f"\nExecuting get_column_contents query for column '{column}'")
+            query = f"""
                 SELECT "{column}"
                 FROM "{self.data_table}"
                 WHERE "{column}" IS NOT NULL
                 ORDER BY index
-            """)
+            """
+            print(f"Query: {query}")
+            print(f"Table: {self.data_table}")
             
-            return [row[0] for row in self.cursor.fetchall()]
+            self.cursor.execute(query)
+            results = [row[0] for row in self.cursor.fetchall()]
+            print(f"Found {len(results)} rows")
+            return results
             
         except Exception as e:
             print(f"Error fetching column contents: {e}")
