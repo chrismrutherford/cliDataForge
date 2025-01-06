@@ -388,13 +388,20 @@ class DatabaseHandler:
         """Get list of column names from the data table"""
         self.connect()
         try:
-            self.cursor.execute("""
+            query = """
                 SELECT column_name 
                 FROM information_schema.columns 
                 WHERE table_name = %s
                 ORDER BY ordinal_position
-            """, (self.data_table,))
-            return [row[0] for row in self.cursor.fetchall()]
+            """
+            print(f"\nExecuting get_column_names query:")
+            print(f"Query: {query}")
+            print(f"Parameters: table_name = '{self.data_table}'")
+            
+            self.cursor.execute(query, (self.data_table,))
+            columns = [row[0] for row in self.cursor.fetchall()]
+            print(f"Found columns: {columns}")
+            return columns
         except Exception as e:
             print(f"Error getting column names: {e}")
             return []
