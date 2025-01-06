@@ -279,7 +279,6 @@ def list_columns(table_name):
 
 @cli.command(name='save-column')
 @click.argument('table_name')
-@click.argument('table_name')
 @click.argument('output_file', type=click.Path())
 @click.option('--column', required=True, help='Column to save')
 def save_column(table_name: str, output_file: str, column: str):
