@@ -284,7 +284,7 @@ def list_columns(table_name):
 def save_column(table_name: str, output_file: str, column: str):
     """Save contents of specified column to a JSON file"""
     try:
-        db = DatabaseHandler(require_data_table=False)
+        db = DatabaseHandler(require_data_table=False, data_table=table_name)
         try:
             contents = db.get_column_contents(column)
             if not contents:
