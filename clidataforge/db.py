@@ -278,9 +278,12 @@ class DatabaseHandler:
             """)
             existing_rows = self.cursor.fetchone()[0]
 
+            # Clean data by removing null bytes
+            cleaned_chunks = [chunk.replace('\x00', '') if chunk else chunk for chunk in chunks]
+            
             if existing_rows == 0:
                 # If table is empty, do regular inserts
-                for chunk in chunks:
+                for chunk in cleaned_chunks:
                     self.cursor.execute(f"""
                         INSERT INTO "{self.data_table}" ("{column}") 
                         VALUES (%s)
@@ -288,7 +291,7 @@ class DatabaseHandler:
                     self.conn.commit()
             else:
                 # Update existing rows in order
-                for i, chunk in enumerate(chunks, 1):
+                for i, chunk in enumerate(cleaned_chunks, 1):
                     if i <= existing_rows:
                         self.cursor.execute(f"""
                             UPDATE "{self.data_table}" 
