@@ -299,15 +299,12 @@ def save_column(table_name: str, output_file: str, column: str):
         if not contents:
             click.echo(f"No data found in column '{column}'")
             return
-                
-            import json
-            with open(output_file, 'w') as f:
-                json.dump(contents, f, indent=2)
-                
-            click.echo(f"Successfully saved {len(contents)} entries from column '{column}' to {output_file}")
-                
-        except ValueError as ve:
-            click.echo(f"Error: {str(ve)}", err=True)
+            
+        import json
+        with open(output_file, 'w') as f:
+            json.dump(contents, f, indent=2)
+            
+        click.echo(f"Successfully saved {len(contents)} entries from column '{column}' to {output_file}")
             
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
