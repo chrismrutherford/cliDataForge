@@ -279,9 +279,10 @@ def list_columns(table_name):
 
 @cli.command(name='save-column')
 @click.argument('table_name')
+@click.argument('table_name')
 @click.argument('output_file', type=click.Path())
 @click.option('--column', required=True, help='Column to save')
-def save_column(output_file: str, column: str):
+def save_column(table_name: str, output_file: str, column: str):
     """Save contents of specified column to a JSON file"""
     try:
         db = DatabaseHandler(require_data_table=False)
