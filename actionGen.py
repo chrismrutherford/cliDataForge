@@ -43,18 +43,10 @@ def process_scenes(input_file: str, output_file: str):
         with open(input_file, 'r') as f:
             scenes = json.load(f)
         
-        # Group scenes by scene_number
-        scene_groups = {}
-        for item in scenes:
-            scene_num = item["scene_number"]
-            if scene_num not in scene_groups:
-                scene_groups[scene_num] = []
-            scene_groups[scene_num].append(item)
-        
-        # Transform each scene group
+        # Transform each scene
         transformed_scenes = []
-        for scene_num in sorted(scene_groups.keys()):
-            transformed = transform_scene(scene_groups[scene_num])
+        for scene in scenes:
+            transformed = transform_scene(scene)
             transformed_scenes.append(transformed)
         
         # Write the transformed scenes to output file
