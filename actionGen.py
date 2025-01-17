@@ -132,6 +132,17 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         })
 
 
+    # Ensure the scene ends with a GPT message
+    if transformed and transformed[-1]["role"] == "user":
+        # Convert the last user message into a GPT response
+        last_user_msg = transformed.pop()
+        gpt_response = {
+            "role": "gpt",
+            "content": last_user_msg["content"],
+            "action": last_user_msg["action"]
+        }
+        transformed.append(gpt_response)
+    
     return transformed
 
 def process_scenes(input_file: str, output_file: str):
