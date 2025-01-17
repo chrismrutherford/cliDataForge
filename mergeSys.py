@@ -2,11 +2,13 @@ import json
 from typing import List, Dict
 import os
 
-def read_json_file(filename: str) -> str:
-    """Read and return the contents of a JSON file"""
+def read_json_file(list_index: int) -> str:
+    """Read and return the contents of a plot file based on list index"""
+    filename = f"p{list_index + 1}"  # p1, p2, etc.
     if os.path.exists(filename):
         with open(filename, 'r') as f:
-            return json.load(f)
+            plot_list = json.load(f)
+            return plot_list[list_index] if list_index < len(plot_list) else ""
     return ""
 
 def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
@@ -21,8 +23,8 @@ def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
         filename = scene_list[0].get('filename', '')
         list_index = scene_list[0].get('list_index', 0)
         
-        # Read the plot from the referenced file
-        plot_content = read_json_file(filename)
+        # Read the plot using list_index
+        plot_content = read_json_file(list_index)
         
         # Create a new plot entry
         plot_entry = {
