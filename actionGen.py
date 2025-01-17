@@ -35,19 +35,11 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         # In hidden, get all 4 and use chosen as e
         # TO DO 
 
-        # Determine if we should use 'e' option (10% chance and exactly 4 alt actions)
-        use_e_option = random.random() < 0.1 and len(other_actions) == 4
-        
-        if use_e_option:
-            # Use all 4 alternative actions, chosen action will be 'e'
-            actions = other_actions[:4]
-            random.shuffle(actions)
-        else:
-            # Get alternative actions (up to 3)
-            alt_actions = other_actions[:3]
-            # Create full list with chosen action first, followed by alternatives
-            actions = [chosen_action] + alt_actions
-            random.shuffle(actions)
+        # Get alternative actions (up to 3)
+        alt_actions = other_actions[:3]
+        # Create full list with chosen action first, followed by alternatives
+        actions = [chosen_action] + alt_actions
+        random.shuffle(actions)
 
         letteredActions = []
         # Format actions with letters
@@ -55,16 +47,11 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             letter = string.ascii_lowercase[idx]
             letteredActions.append({"letter":letter, "action":action})
             
-        if use_e_option:
-            # Add chosen action as option 'e'
-            letteredActions.append({"letter":"e", "action":chosen_action})
-            chosen_pos = len(letteredActions) - 1
-        else:
-            chosen_pos = None
-            for index, item in enumerate(letteredActions):
-                if chosen_action in item["action"]:
-                    chosen_pos = index
-                    break
+        chosen_pos = None
+        for index, item in enumerate(letteredActions):
+            if chosen_action in item["action"]:
+                chosen_pos = index
+                break
         print("chosen",chosen_pos)
         if(chosen_pos == None):
             exit(-1)
