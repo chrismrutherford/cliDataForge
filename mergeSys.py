@@ -8,18 +8,25 @@ plot_cache = {}
 def read_json_file(list_index: int) -> str:
     """Read and return the contents of a plot file based on list index"""
     filename = f"p{list_index + 1}"  # p1, p2, etc.
+    print(f"DEBUG: Attempting to read file: {filename}")
+    print(f"DEBUG: Current working directory: {os.getcwd()}")
     
     # Check if file is already cached
     if filename not in plot_cache:
         if os.path.exists(filename):
+            print(f"DEBUG: File {filename} exists, reading contents")
             with open(filename, 'r') as f:
                 plot_cache[filename] = json.load(f)
+                print(f"DEBUG: Loaded content length: {len(plot_cache[filename])}")
         else:
+            print(f"DEBUG: File {filename} does not exist")
             plot_cache[filename] = []
     
     # Get plot from cache
     plot_list = plot_cache[filename]
-    return plot_list[list_index] if list_index < len(plot_list) else ""
+    result = plot_list[list_index] if list_index < len(plot_list) else ""
+    print(f"DEBUG: Returning content for index {list_index}: {'<empty>' if not result else 'has content'}")
+    return result
 
 def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
     """Add plot information from referenced files to each scene list"""
