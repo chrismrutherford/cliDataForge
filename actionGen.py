@@ -3,6 +3,31 @@ import string
 import random
 from typing import List, Dict
 
+import random
+
+def modify_action_string(actionStr):
+    # Extract the letter and the chosen action
+    letter, action = actionStr.split(')')[0], actionStr.split(')')[1].strip()
+
+    if letter.lower() == 'e':
+        # For 'e', always include the action, but with variable prefix
+        prefixes = ['e)', 'e:', 'e', '']
+        chosen_prefix = random.choice(prefixes)
+        return f"{chosen_prefix} {action}".strip()
+
+    # For other letters, proceed with the original logic
+    rand = random.random()
+
+    if rand < 0.9:
+        # 90% chance: Return just the letter with one of the terminators
+        terminators = [')', ':', '']
+        return f"{letter}{random.choice(terminators)}"
+    else:
+        # 10% chance: Return letter, terminator plus full action
+        terminators = [')', ':', '']
+        return f"{letter}{random.choice(terminators)} {action}"
+
+
 def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     """Transform a scene into the new format with system/assistant roles."""
     if not scene_list:
@@ -12,7 +37,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     
     # First message becomes system
     transformed.append({
-        "role": "system",
+        "role": "user",
         "content": scene_list[0]["content"],
         "action": None  # System message has no action
     })
@@ -85,7 +110,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         #    print("SS", prefixed_content)
             
         transformed.append({
-            "role": "assistant",
+            "role": "gpt",
             "content": prefixed_content,
             "action": chosen_action
         })
@@ -96,13 +121,16 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         else:
             actionStr = f'{letteredActions[chosen_pos]["letter"]}) {letteredActions[chosen_pos]["action"]}'
 
+        prev_action = actionStr 
+
+        actionStr = modify_action_string(actionStr)
+
         transformed.append({
             "role": "user",
             "content": actionStr,
             "action": chosen_action
         })
 
-        prev_action = actionStr 
 
     return transformed
 
