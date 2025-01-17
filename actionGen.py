@@ -62,19 +62,15 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
                 letter = string.ascii_lowercase[idx]
                 action_menu += f"\n{letter}) {action}"
             content += action_menu
-        #else:
-        #    # For subsequent messages, prepend with the chosen action
-        #    content = f'You {item["action"]}\n\n{content}'
+
         # For messages after the first assistant message, prefix with previous letter and action
         if i > 1 and prev_chosen_pos is not None:
-            # Use the actual chosen position for the letter
             prev_letter = string.ascii_lowercase[prev_chosen_pos]
-            prefixed_content = f"{prev_letter}) {prev_chosen_action}\n\n{content}"
+            prefixed_content = f"{prev_letter}) {actions[0]}\n\n{content}"
         else:
             prefixed_content = content
             
         prev_chosen_pos = chosen_pos
-        prev_chosen_action = actions[0] if i > 0 else None
             
         transformed.append({
             "role": "assistant",
@@ -83,17 +79,13 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         })
 
         if i > 0:
-            # For option 'e', always show full action. Otherwise 90/10 chance
+            # Just show the letter position that was chosen
             letter = string.ascii_lowercase[chosen_pos]
-            chosen_action = actions[chosen_pos]
-            if chosen_pos == 4:  # Option 'e'
-                user_content = f"{letter}) {chosen_action}"
-            else:
-                user_content = letter if random.random() < 0.9 else f"{letter}) {chosen_action}"
+            user_content = letter
             transformed.append({
                 "role": "user",
                 "content": user_content,
-                "action": chosen_action  # Use the actual chosen action based on position
+                "action": actions[0]  # Always use the first action for debugging
             })
         
     
