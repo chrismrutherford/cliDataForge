@@ -63,13 +63,12 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             content += action_menu
 
         # For messages after the first assistant message, prefix with previous letter and action
-        if i > 1 and prev_chosen_pos is not None:
-            prev_letter = string.ascii_lowercase[prev_chosen_pos]
-            prefixed_content = f"{prev_letter}) {actions[0]}\n\n{content}"
+        if i > 1 and prev_chosen_action is not None:
+            prefixed_content = f"{prev_chosen_action}\n\n{content}"
         else:
             prefixed_content = content
             
-        prev_chosen_pos = chosen_pos
+        prev_chosen_action = chosen_action if i > 0 else None
             
         transformed.append({
             "role": "assistant",
@@ -78,9 +77,13 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         })
 
         if i > 0:
-            # Just show the letter position that was chosen
-            letter = string.ascii_lowercase[chosen_pos]
-            user_content = letter
+            # Use the chosen action letter
+            action_index = find_substring_index(actions, chosen_action.strip())
+            if action_index >= 0:
+                letter = string.ascii_lowercase[action_index]
+                user_content = letter
+            else:
+                user_content = "a"  # fallback
             transformed.append({
                 "role": "user",
                 "content": user_content,
@@ -111,14 +114,8 @@ def process_scenes(input_file: str, output_file: str):
 
 def main():
     try:
-        input_file = "scenes.json"  # Change to a more standard filename
+        input_file = "a.j"
         output_file = "transformed_scenes.json"
-        
-        # Check if input file exists
-        import os
-        if not os.path.exists(input_file):
-            print(f"Error: Input file '{input_file}' not found")
-            return
             
         process_scenes(input_file, output_file)
         print(f"Successfully processed scenes from '{input_file}' to '{output_file}'")
