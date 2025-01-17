@@ -8,10 +8,8 @@ def convert_to_sharegpt(input_file: str, output_file: str):
 
     all_conversations = []
     
-    for conversation_data in data:
+    for conversation in data:
         current_conversation = []
-        conversation = conversation_data.get("messages", [])
-        
         for message in conversation:
             role = message.get("role")
             content = message.get("content", "").rstrip('\\n')
