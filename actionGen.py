@@ -19,6 +19,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     
     # Process subsequent messages
     prev_chosen_pos = None
+    prev_chosen_action = None
     actions = []  # Initialize actions list
     for i, item in enumerate(scene_list[1:], 1):
         content = item["content"]
@@ -68,13 +69,12 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         if i > 1 and prev_chosen_pos is not None:
             # Use the actual chosen position for the letter
             prev_letter = string.ascii_lowercase[prev_chosen_pos]
-            # Get the action that corresponds to the chosen position
-            prev_action = prev_actions[prev_chosen_pos]
-            prefixed_content = f"{prev_letter}) {prev_action}\n\n{content}"
+            prefixed_content = f"{prev_letter}) {prev_chosen_action}\n\n{content}"
         else:
             prefixed_content = content
             
         prev_chosen_pos = chosen_pos
+        prev_chosen_action = actions[0] if i > 0 else None
             
         transformed.append({
             "role": "assistant",
