@@ -32,29 +32,18 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             chosen_action = item["action"]
             other_actions = item["altActions"]
             
-            # Check if we have 5 or more actions total
-            has_hidden_option = len(other_actions) >= 4  # 4 alt actions + 1 chosen = 5 total
+            # Create full list of actions including chosen and alternatives
+            actions = [chosen_action] + other_actions[:3]  # Take chosen action plus up to 3 alternatives
             
-            # 10% chance to use hidden option if available
-            use_hidden = has_hidden_option and random.random() < 0.1
-            
-            # Always put chosen_action first
-            actions = [chosen_action]
-            
-            if use_hidden:
-                # When using hidden option 'e', show it at position 4
-                chosen_pos = 4
-                actions.extend(other_actions[:4])  # Add 4 alternative actions for a-d
-            else:
-                # Normal visible a-d options
-                other_actions = other_actions[:3]  # Take only up to 3 alternative actions
-                random.shuffle(other_actions)
-                actions.extend(other_actions)
-                chosen_pos = random.randint(0, 3)  # Just for letter display
+            # Ensure exactly 4 options
+            while len(actions) < 4:
+                actions.append(f"Do nothing {len(actions) + 1}")
                 
-                # Ensure exactly 4 visible options
-                while len(actions) < 4:
-                    actions.append(f"Do nothing {len(actions) + 1}")
+            # Randomize the order
+            random.shuffle(actions)
+            
+            # Find position of the chosen action
+            chosen_pos = actions.index(chosen_action)
             
             # Create menu with visible actions (only a-d)
             action_menu = "\n\nDo you:"
