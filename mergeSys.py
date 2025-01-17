@@ -17,8 +17,9 @@ def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
         if not scene_list:  # Skip empty lists
             continue
             
-        # Get the filename from the first scene in the list
+        # Get the filename and list_index from the first scene in the list
         filename = scene_list[0].get('filename', '')
+        list_index = scene_list[0].get('list_index', 0)
         
         # Read the plot from the referenced file
         plot_content = read_json_file(filename)
@@ -29,7 +30,7 @@ def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
             "content": plot_content,
             "action": "",
             "filename": filename,
-            "list_index": 0,
+            "list_index": list_index,  # Use the same list_index as the scenes
             "altActions": ["", "", ""]
         }
         
