@@ -26,60 +26,63 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         content = item["content"]
         chosen_pos = None
 
-        print("i",i)
+        #print("i",i)
         
         # Get actions
         chosen_action = item["action"]
         other_actions = item["altActions"]
         
-        # In hidden, get all 4 and use chosen as e
-        # TO DO 
-
         # Determine if we should include a hidden option 'e'
-        include_hidden_e = len(other_actions) >= 4 or random.random() < 0.1
-        
-        # Get alternative actions (up to 3, or 4 if we're including hidden e)
-        alt_actions = other_actions[:4] if include_hidden_e else other_actions[:3]
-        # Create full list with chosen action first, followed by alternatives
-        actions = [chosen_action] + alt_actions
-        random.shuffle(actions)
+        include_hidden_e = len(other_actions) >= 4 and random.random() < 0.1
         
         # If including hidden e, ensure chosen action is also in position 4
         if include_hidden_e:
-            actions = actions[:4]  # Trim to first 4 actions
+            actions = other_actions[:4]  # Trim to first 4 actions
+        else:
+            actions = [chosen_action] + other_actions[:3]
+
+        if(len(actions) <4):
+            print (actions, include_hidden_e, len(actions))
+            #exit(0)
+        
+
+        random.shuffle(actions)
 
         letteredActions = []
         # Format actions with letters
         for idx, action in enumerate(actions):
             letter = string.ascii_lowercase[idx]
             letteredActions.append({"letter":letter, "action":action})
+
+        #if include_hidden_e:
+        #    print("GG", letteredActions)
             
         chosen_pos = None
         for index, item in enumerate(letteredActions):
             if chosen_action in item["action"]:
                 chosen_pos = index
                 break
-        print("chosen",chosen_pos)
-        if(chosen_pos == None):
-            exit(-1)
+
 
         # Create menu with actions (excluding hidden e)
         action_menu = "\n\nDo you:"
         for idx, action in enumerate(letteredActions):
-            if idx < 4:  # Only show a-d options
-                action_menu += f'\n{action["letter"]}) {action["action"]}'
-                
-        # If we have hidden e, add chosen action as hidden option
-        if include_hidden_e:
-            letteredActions.append({"letter": "e", "action": chosen_action})
+            action_menu += f'\n{action["letter"]}) {action["action"]}'
 
+                
         content += action_menu
+
+        #if include_hidden_e:
+        #    print("HH", content)
 
         # For messages after the first assistant message, prefix with previous letter and action
         if i > 0 and prev_action != None :
             prefixed_content = f'{prev_action}\n\n{content}'
         else:
             prefixed_content = content
+
+        #if include_hidden_e:
+        #    print("SS", prefixed_content)
             
         transformed.append({
             "role": "assistant",
@@ -87,13 +90,19 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             "action": chosen_action
         })
 
+        # If we have hidden e, add chosen action as hidden option
+        if include_hidden_e:
+            actionStr= f"e)  {chosen_action}"
+        else:
+            actionStr = f'{letteredActions[chosen_pos]["letter"]}) {letteredActions[chosen_pos]["action"]}'
+
         transformed.append({
             "role": "user",
-            "content": f'{letteredActions[chosen_pos]["letter"]}) {letteredActions[chosen_pos]["action"]}',
+            "content": actionStr,
             "action": chosen_action
         })
 
-        prev_action = f'{letteredActions[chosen_pos]["letter"]}) {letteredActions[chosen_pos]["action"]}'
+        prev_action = actionStr 
 
     return transformed
 
