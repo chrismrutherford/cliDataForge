@@ -30,7 +30,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     for i, item in enumerate(scene_list[1:], 1):
         content = item["content"]
         chosen_pos = None
-        prev_actions = actions  # Store previous actions for reference
+        prev_action = ""
         
         # For the first assistant message, add actions as a menu
         if i > 0:
@@ -38,40 +38,41 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             chosen_action = item["action"]
             other_actions = item["altActions"]
             
+            # In hidden, get all 4 and use chosen as e
+            # TO DO 
+
             # Get alternative actions (up to 3)
             alt_actions = other_actions[:3]
             
-            # Ensure we have exactly 3 alternative options
-            while len(alt_actions) < 3:
-                alt_actions.append(f"Do nothing {len(alt_actions) + 1}")
-                
-            # Randomize only the alternative actions
-            random.shuffle(alt_actions)
-            
             # Create full list with chosen action first, followed by alternatives
             actions = [chosen_action] + alt_actions
-            
+
+            random.shuffle(actions)
+
+            letteredActions=[]
             # Format actions with letters
-            for idx, action in enumerate(actions[:4]):
+            for idx, action in enumerate(actions):
                 letter = string.ascii_lowercase[idx]
-                actions[idx] = f"\n{letter}) {action}"
+                letteredActions.append({"letter":letter,"action":action})
 
-            action_index = find_substring_index(actions, chosen_action)
-            chosen_action = actions[action_index]
+            for index, item in enumerate(lst):
+                if substring in item["action"]:
+                    break
+                    prev_action = f'n{acton["letter"]})  {action["action"]}'
+                    print("index", index)
 
-            # Create menu with visible actions (only a-d)
+            # Create menu with actions
             action_menu = "\n\nDo you:"
-            for idx, action in enumerate(actions[:4]):  # Only show first 4 options
-                action_menu += f"\n{action}"
+            for idx, action in enumerate(letteredActions):  
+                action_menu += f'n{acton["letter"]})  {action["action"]}'
+
             content += action_menu
 
         # For messages after the first assistant message, prefix with previous letter and action
-        if i > 1 and prev_chosen_action is not None:
-            prefixed_content = f"{prev_chosen_action}\n\n{content}"
+        if i > 1 and prev_action is not None:
+            prefixed_content = f"{prev_action}\n\n{content}"
         else:
             prefixed_content = content
-            
-        prev_chosen_action = chosen_action if i > 0 else None
             
         transformed.append({
             "role": "assistant",
@@ -79,21 +80,6 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             "action": actions[0] if i > 0 else None
         })
 
-        if i > 0:
-            # Use the chosen action letter
-            action_index = find_substring_index(actions, chosen_action.strip())
-            if action_index >= 0:
-                letter = string.ascii_lowercase[action_index]
-                user_content = letter
-            else:
-                user_content = "a"  # fallback
-            transformed.append({
-                "role": "user",
-                "content": user_content,
-                "action": actions[0]  # Always use the first action for debugging
-            })
-        
-    
     return transformed
 
 def process_scenes(input_file: str, output_file: str):
