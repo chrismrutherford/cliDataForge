@@ -67,11 +67,8 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         # For messages after the first assistant message, prefix with previous letter and action
         if i > 1 and prev_chosen_pos is not None:
             prev_letter = string.ascii_lowercase[prev_chosen_pos]
-            # If previous was hidden option (e), use the actual chosen action from previous actions list
-            if prev_chosen_pos == 4:
-                prev_action = prev_actions[prev_chosen_pos]  # Use the hidden action
-            else:
-                prev_action = scene_list[i-1]["action"]
+            # Always use the chosen action (actions[0]) from previous actions
+            prev_action = prev_actions[0]
             prefixed_content = f"{prev_letter}) {prev_action}\n\n{content}"
         else:
             prefixed_content = content
