@@ -20,20 +20,26 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         content = item["content"]
         
         # For the first assistant message, add actions as a menu
-        if i == 1:
+        if i > 0:
             actions = [item["action"]] + item["altActions"]
             action_menu = "\n\nDo you:"
             for idx, action in enumerate(actions):
                 action_menu += f"\n{string.ascii_lowercase[idx]}) {action}"
             content += action_menu
-        else:
-            # For subsequent messages, prepend with the chosen action
-            content = f'You {item["action"]}\n\n{content}'
-        
+        #else:
+        #    # For subsequent messages, prepend with the chosen action
+        #    content = f'You {item["action"]}\n\n{content}'
         transformed.append({
             "role": "assistant",
             "content": content
         })
+
+        if i > 0:
+            transformed.append({
+                "role": "user",
+                "content": actions[0]
+            })
+        
     
     return transformed
 
