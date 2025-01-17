@@ -26,7 +26,7 @@ def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
         
         # Create a new plot entry
         plot_entry = {
-            "scene_number": 0,  # Use 0 for the plot entry
+            "scene_number": scene_list[0].get('scene_number', 0),  # Use same scene number as source
             "content": plot_content,
             "action": "",
             "filename": filename,
