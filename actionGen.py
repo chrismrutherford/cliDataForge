@@ -50,9 +50,12 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         })
 
         if i > 0:
+            # 90% chance for just the letter, 10% chance for letter + action
+            letter = string.ascii_lowercase[chosen_pos]
+            user_content = letter if random.random() < 0.9 else f"{letter}) {chosen_action}"
             transformed.append({
                 "role": "user",
-                "content": chosen_action
+                "content": user_content
             })
         
     
