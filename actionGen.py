@@ -62,8 +62,9 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         })
 
         if i > 0:
-            # 90% chance for just the letter, 10% chance for letter + action
+            # 90% chance for just the letter, 10% chance for letter + full action text
             letter = string.ascii_lowercase[chosen_pos]
+            chosen_action = actions[chosen_pos]  # Get the action at the chosen position
             user_content = letter if random.random() < 0.9 else f"{letter}) {chosen_action}"
             transformed.append({
                 "role": "user",
