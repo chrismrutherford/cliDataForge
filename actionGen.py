@@ -24,25 +24,37 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         
         # For the first assistant message, add actions as a menu
         if i > 0:
-            # Get all actions and limit to 4 total options
+            # Get actions
             chosen_action = item["action"]
-            other_actions = item["altActions"][:3]  # Take only up to 3 alternative actions
-            random.shuffle(other_actions)
+            other_actions = item["altActions"]
             
-            # Randomly select position for chosen action (0-3 for a-d)
-            chosen_pos = random.randint(0, 3)
+            # Check if we have 5 or more actions total
+            has_hidden_option = len(other_actions) >= 4  # 4 alt actions + 1 chosen = 5 total
             
-            # Build action list with chosen action at random position
-            actions = other_actions.copy()
-            actions.insert(chosen_pos, chosen_action)
+            # 10% chance to use hidden option if available
+            use_hidden = has_hidden_option and random.random() < 0.1
             
-            # Ensure exactly 4 options by padding with defaults if necessary
-            while len(actions) < 4:
-                actions.append(f"Do nothing {len(actions) + 1}")
+            if use_hidden:
+                # Use first alternative action as hidden option
+                chosen_pos = 4  # Position 'e'
+                actions = [chosen_action] + other_actions[:3]  # Show only a-d options
+                hidden_action = other_actions[0]  # First alt action becomes hidden option
+                actions.append(hidden_action)  # Add to actions list but won't be displayed
+            else:
+                # Normal visible a-d options
+                other_actions = other_actions[:3]  # Take only up to 3 alternative actions
+                random.shuffle(other_actions)
+                chosen_pos = random.randint(0, 3)
+                actions = other_actions.copy()
+                actions.insert(chosen_pos, chosen_action)
+                
+                # Ensure exactly 4 visible options
+                while len(actions) < 4:
+                    actions.append(f"Do nothing {len(actions) + 1}")
             
-            # Create menu with shuffled actions
+            # Create menu with visible actions (only a-d)
             action_menu = "\n\nDo you:"
-            for idx, action in enumerate(actions):
+            for idx, action in enumerate(actions[:4]):  # Only show first 4 options
                 letter = string.ascii_lowercase[idx]
                 action_menu += f"\n{letter}) {action}"
             content += action_menu
