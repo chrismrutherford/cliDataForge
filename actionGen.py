@@ -3,6 +3,12 @@ import string
 import random
 from typing import List, Dict
 
+def find_substring_index(lst, substring):
+    for index, item in enumerate(lst):
+        if substring in str(item):
+            return index
+    return -1  # Return -1 if no match is found
+
 def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     """Transform a scene into the new format with system/assistant roles."""
     if not scene_list:
@@ -41,15 +47,19 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
                 
             # Randomize the order
             random.shuffle(actions)
-            
-            # Find position of the chosen action
-            chosen_pos = actions.index(chosen_action)
-            
+
+            for idx, action in enumerate(actions[:4]):  # Only show first 4 options
+                letter = string.ascii_lowercase[idx]
+                actions[idx]= f"\n{letter}) {action}"
+
+            action_index = find_substring_index(actions,chosen_action)
+
+            chosen_action = actions[action_index]
+
             # Create menu with visible actions (only a-d)
             action_menu = "\n\nDo you:"
             for idx, action in enumerate(actions[:4]):  # Only show first 4 options
-                letter = string.ascii_lowercase[idx]
-                action_menu += f"\n{letter}) {action}"
+                action_menu += f"\n{action}"
             content += action_menu
 
         # For messages after the first assistant message, prefix with previous letter and action
