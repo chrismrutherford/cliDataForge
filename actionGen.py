@@ -93,7 +93,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             transformed.append({
                 "role": "user",
                 "content": user_content,
-                "action": actions[0]  # Include chosen action in user messages too
+                "action": chosen_action  # Use the actual chosen action based on position
             })
         
     
