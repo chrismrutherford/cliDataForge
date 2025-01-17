@@ -37,11 +37,10 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             use_hidden = has_hidden_option and random.random() < 0.1
             
             if use_hidden:
-                # Use first alternative action as hidden option
+                # When using hidden option 'e', the chosen_action must be in position 4
                 chosen_pos = 4  # Position 'e'
-                actions = [chosen_action] + other_actions[:3]  # Show only a-d options
-                hidden_action = other_actions[0]  # First alt action becomes hidden option
-                actions.append(hidden_action)  # Add to actions list but won't be displayed
+                actions = other_actions[:4]  # Take first 4 alternative actions for a-d
+                actions.append(chosen_action)  # Put chosen action in position 'e'
             else:
                 # Normal visible a-d options
                 other_actions = other_actions[:3]  # Take only up to 3 alternative actions
