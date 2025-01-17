@@ -66,10 +66,10 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         #    content = f'You {item["action"]}\n\n{content}'
         # For messages after the first assistant message, prefix with previous letter and action
         if i > 1 and prev_chosen_pos is not None:
-            # Find position of the chosen action in previous actions list
-            chosen_action_pos = prev_actions.index(prev_actions[0])
-            prev_letter = string.ascii_lowercase[chosen_action_pos]
-            prev_action = prev_actions[0]
+            # Use the actual chosen position for the letter
+            prev_letter = string.ascii_lowercase[prev_chosen_pos]
+            # Get the action that corresponds to the chosen position
+            prev_action = prev_actions[prev_chosen_pos]
             prefixed_content = f"{prev_letter}) {prev_action}\n\n{content}"
         else:
             prefixed_content = content
