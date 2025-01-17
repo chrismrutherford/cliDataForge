@@ -65,7 +65,7 @@ def process_scenes(input_file: str, output_file: str):
         print(f"Error processing file: {e}")
 
 def main():
-    input_file = "a.j"
+    input_file = "scenes.json"
     output_file = "transformed_scenes.json"
     process_scenes(input_file, output_file)
 
