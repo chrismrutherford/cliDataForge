@@ -35,11 +35,18 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         # In hidden, get all 4 and use chosen as e
         # TO DO 
 
-        # Get alternative actions (up to 3)
-        alt_actions = other_actions[:3]
+        # Determine if we should include a hidden option 'e'
+        include_hidden_e = len(other_actions) >= 4 or random.random() < 0.1
+        
+        # Get alternative actions (up to 3, or 4 if we're including hidden e)
+        alt_actions = other_actions[:4] if include_hidden_e else other_actions[:3]
         # Create full list with chosen action first, followed by alternatives
         actions = [chosen_action] + alt_actions
         random.shuffle(actions)
+        
+        # If including hidden e, ensure chosen action is also in position 4
+        if include_hidden_e:
+            actions = actions[:4]  # Trim to first 4 actions
 
         letteredActions = []
         # Format actions with letters
@@ -56,10 +63,15 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         if(chosen_pos == None):
             exit(-1)
 
-        # Create menu with actions
+        # Create menu with actions (excluding hidden e)
         action_menu = "\n\nDo you:"
-        for idx, action in enumerate(letteredActions):  
-            action_menu += f'\n{action["letter"]}) {action["action"]}'
+        for idx, action in enumerate(letteredActions):
+            if idx < 4:  # Only show a-d options
+                action_menu += f'\n{action["letter"]}) {action["action"]}'
+                
+        # If we have hidden e, add chosen action as hidden option
+        if include_hidden_e:
+            letteredActions.append({"letter": "e", "action": chosen_action})
 
         content += action_menu
 
