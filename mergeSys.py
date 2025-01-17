@@ -2,14 +2,24 @@ import json
 from typing import List, Dict
 import os
 
+# Cache for loaded plot files
+plot_cache = {}
+
 def read_json_file(list_index: int) -> str:
     """Read and return the contents of a plot file based on list index"""
     filename = f"p{list_index + 1}"  # p1, p2, etc.
-    if os.path.exists(filename):
-        with open(filename, 'r') as f:
-            plot_list = json.load(f)
-            return plot_list[list_index] if list_index < len(plot_list) else ""
-    return ""
+    
+    # Check if file is already cached
+    if filename not in plot_cache:
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                plot_cache[filename] = json.load(f)
+        else:
+            plot_cache[filename] = []
+    
+    # Get plot from cache
+    plot_list = plot_cache[filename]
+    return plot_list[list_index] if list_index < len(plot_list) else ""
 
 def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
     """Add plot information from referenced files to each scene list"""
