@@ -55,8 +55,9 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             for idx, action in enumerate(actions[:4]):
                 letter = string.ascii_lowercase[idx]
                 actions[idx] = f"\n{letter}) {action}"
-                
-            chosen_action = actions[0]  # Always the first action
+
+            action_index = find_substring_index(actions, chosen_action)
+            chosen_action = actions[action_index]
 
             # Create menu with visible actions (only a-d)
             action_menu = "\n\nDo you:"
