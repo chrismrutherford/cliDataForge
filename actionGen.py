@@ -36,18 +36,19 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             # 10% chance to use hidden option if available
             use_hidden = has_hidden_option and random.random() < 0.1
             
+            # Always put chosen_action first
+            actions = [chosen_action]
+            
             if use_hidden:
-                # When using hidden option 'e', the chosen_action must be in position 4
-                chosen_pos = 4  # Position 'e'
-                actions = other_actions[:4]  # Take first 4 alternative actions for a-d
-                actions.append(chosen_action)  # Put chosen action in position 'e'
+                # When using hidden option 'e', show it at position 4
+                chosen_pos = 4
+                actions.extend(other_actions[:4])  # Add 4 alternative actions for a-d
             else:
                 # Normal visible a-d options
                 other_actions = other_actions[:3]  # Take only up to 3 alternative actions
                 random.shuffle(other_actions)
-                chosen_pos = random.randint(0, 3)
-                actions = other_actions.copy()
-                actions.insert(chosen_pos, chosen_action)
+                actions.extend(other_actions)
+                chosen_pos = random.randint(0, 3)  # Just for letter display
                 
                 # Ensure exactly 4 visible options
                 while len(actions) < 4:
