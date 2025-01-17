@@ -24,18 +24,21 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         
         # For the first assistant message, add actions as a menu
         if i > 0:
-            # Get all actions and shuffle them
+            # Get all actions and limit to 4 total options
             chosen_action = item["action"]
-            all_actions = [chosen_action] + item["altActions"]
-            other_actions = item["altActions"]
+            other_actions = item["altActions"][:3]  # Take only up to 3 alternative actions
             random.shuffle(other_actions)
             
-            # Randomly select position for chosen action
-            chosen_pos = random.randint(0, len(all_actions) - 1)
+            # Randomly select position for chosen action (0-3 for a-d)
+            chosen_pos = random.randint(0, 3)
             
-            # Build shuffled action list with chosen action at random position
+            # Build action list with chosen action at random position
             actions = other_actions.copy()
             actions.insert(chosen_pos, chosen_action)
+            
+            # Ensure exactly 4 options by padding with defaults if necessary
+            while len(actions) < 4:
+                actions.append(f"Do nothing {len(actions) + 1}")
             
             # Create menu with shuffled actions
             action_menu = "\n\nDo you:"
