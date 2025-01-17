@@ -13,7 +13,8 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     # First message becomes system
     transformed.append({
         "role": "system",
-        "content": scene_list[0]["content"]
+        "content": scene_list[0]["content"],
+        "action": None  # System message has no action
     })
     
     # Process subsequent messages
@@ -78,8 +79,9 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         prev_chosen_pos = chosen_pos
             
         transformed.append({
-            "role": "assistant", 
-            "content": prefixed_content
+            "role": "assistant",
+            "content": prefixed_content,
+            "action": actions[0] if i > 0 else None
         })
 
         if i > 0:
@@ -92,7 +94,8 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
                 user_content = letter if random.random() < 0.9 else f"{letter}) {chosen_action}"
             transformed.append({
                 "role": "user",
-                "content": user_content
+                "content": user_content,
+                "action": actions[0]  # Include chosen action in user messages too
             })
         
     
