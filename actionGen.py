@@ -38,23 +38,25 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
             chosen_action = item["action"]
             other_actions = item["altActions"]
             
-            # Create full list of actions including chosen and alternatives
-            actions = [chosen_action] + other_actions[:3]  # Take chosen action plus up to 3 alternatives
+            # Get alternative actions (up to 3)
+            alt_actions = other_actions[:3]
             
-            # Ensure exactly 4 options
-            while len(actions) < 4:
-                actions.append(f"Do nothing {len(actions) + 1}")
+            # Ensure we have exactly 3 alternative options
+            while len(alt_actions) < 3:
+                alt_actions.append(f"Do nothing {len(alt_actions) + 1}")
                 
-            # Randomize the order
-            random.shuffle(actions)
-
-            for idx, action in enumerate(actions[:4]):  # Only show first 4 options
+            # Randomize only the alternative actions
+            random.shuffle(alt_actions)
+            
+            # Create full list with chosen action first, followed by alternatives
+            actions = [chosen_action] + alt_actions
+            
+            # Format actions with letters
+            for idx, action in enumerate(actions[:4]):
                 letter = string.ascii_lowercase[idx]
-                actions[idx]= f"\n{letter}) {action}"
-
-            action_index = find_substring_index(actions,chosen_action)
-
-            chosen_action = actions[action_index]
+                actions[idx] = f"\n{letter}) {action}"
+                
+            chosen_action = actions[0]  # Always the first action
 
             # Create menu with visible actions (only a-d)
             action_menu = "\n\nDo you:"
