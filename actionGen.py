@@ -110,9 +110,21 @@ def process_scenes(input_file: str, output_file: str):
         print(f"Error processing file: {e}")
 
 def main():
-    input_file = "a.j"
-    output_file = "transformed_scenes.json"
-    process_scenes(input_file, output_file)
+    try:
+        input_file = "scenes.json"  # Change to a more standard filename
+        output_file = "transformed_scenes.json"
+        
+        # Check if input file exists
+        import os
+        if not os.path.exists(input_file):
+            print(f"Error: Input file '{input_file}' not found")
+            return
+            
+        process_scenes(input_file, output_file)
+        print(f"Successfully processed scenes from '{input_file}' to '{output_file}'")
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     main()
