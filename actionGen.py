@@ -17,8 +17,10 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
     })
     
     # Process subsequent messages
+    prev_chosen_pos = None
     for i, item in enumerate(scene_list[1:], 1):
         content = item["content"]
+        chosen_pos = None
         
         # For the first assistant message, add actions as a menu
         if i > 0:
@@ -45,12 +47,14 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         #    # For subsequent messages, prepend with the chosen action
         #    content = f'You {item["action"]}\n\n{content}'
         # For messages after the first assistant message, prefix with previous letter and action
-        if i > 1:
-            prev_letter = string.ascii_lowercase[chosen_pos]
+        if i > 1 and prev_chosen_pos is not None:
+            prev_letter = string.ascii_lowercase[prev_chosen_pos]
             prev_action = scene_list[i-1]["action"]
             prefixed_content = f"{prev_letter}) {prev_action}\n\n{content}"
         else:
             prefixed_content = content
+            
+        prev_chosen_pos = chosen_pos
             
         transformed.append({
             "role": "assistant", 
