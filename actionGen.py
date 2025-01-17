@@ -1,5 +1,6 @@
 import json
 import string
+import random
 from typing import List, Dict
 
 def transform_scene(scene_list: List[Dict]) -> List[Dict]:
@@ -21,10 +22,24 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         
         # For the first assistant message, add actions as a menu
         if i > 0:
-            actions = [item["action"]] + item["altActions"]
+            # Get all actions and shuffle them
+            chosen_action = item["action"]
+            all_actions = [chosen_action] + item["altActions"]
+            other_actions = item["altActions"]
+            random.shuffle(other_actions)
+            
+            # Randomly select position for chosen action
+            chosen_pos = random.randint(0, len(all_actions) - 1)
+            
+            # Build shuffled action list with chosen action at random position
+            actions = other_actions.copy()
+            actions.insert(chosen_pos, chosen_action)
+            
+            # Create menu with shuffled actions
             action_menu = "\n\nDo you:"
             for idx, action in enumerate(actions):
-                action_menu += f"\n{string.ascii_lowercase[idx]}) {action}"
+                letter = string.ascii_lowercase[idx]
+                action_menu += f"\n{letter}) {action}"
             content += action_menu
         #else:
         #    # For subsequent messages, prepend with the chosen action
@@ -37,7 +52,7 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         if i > 0:
             transformed.append({
                 "role": "user",
-                "content": actions[0]
+                "content": chosen_action
             })
         
     
