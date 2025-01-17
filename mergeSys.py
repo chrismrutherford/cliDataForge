@@ -40,10 +40,8 @@ def add_plot_to_scenes(scenes: List[List[Dict]]) -> List[List[Dict]]:
         plot_entry = {
             "scene_number": scene_list[0].get('scene_number', 0),  # Use same scene number as source
             "content": plot_content,
-            "action": "",
             "filename": filename,
             "list_index": list_index,  # Use the same list_index as the scenes
-            "altActions": ["", "", ""]
         }
         
         # Add plot as first item in the list
