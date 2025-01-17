@@ -44,9 +44,16 @@ def transform_scene(scene_list: List[Dict]) -> List[Dict]:
         #else:
         #    # For subsequent messages, prepend with the chosen action
         #    content = f'You {item["action"]}\n\n{content}'
+        # For assistant messages after the first one, prefix with letter and action
+        if i > 0:
+            letter = string.ascii_lowercase[chosen_pos]
+            prefixed_content = f"{letter}) {chosen_action}\n\n{content}"
+        else:
+            prefixed_content = content
+            
         transformed.append({
             "role": "assistant",
-            "content": content
+            "content": prefixed_content
         })
 
         if i > 0:
