@@ -30,7 +30,8 @@ class LLMClient:
             
         self.client = OpenAI(
             base_url=base_url or os.getenv("CLI_DF_BASE_URL", "https://api.deepseek.com"),
-            api_key=self.api_key
+            api_key=self.api_key,
+            timeout=60.0  # 60 second timeout
         )
         
         self.extra_headers = {
@@ -73,6 +74,7 @@ class LLMClient:
                     messages=messages,
                     temperature=1.2,
                     max_tokens=8192,
+                    timeout=90.0  # 90 second timeout for individual requests
                 )
                 
                 if completion and completion.choices:
@@ -84,6 +86,7 @@ class LLMClient:
                 if("Content Exists Risk" in str(e)):
                     return "400"
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    # Exponential backoff: wait longer between each retry
+                    time.sleep(2 ** attempt)  # 1s, 2s, 4s between retries
                     
         return f"Error: Maximum retries ({max_retries}) exceeded"
