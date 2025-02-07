@@ -31,7 +31,7 @@ class LLMClient:
         self.client = OpenAI(
             base_url=base_url or os.getenv("CLI_DF_BASE_URL", "https://api.deepseek.com"),
             api_key=self.api_key,
-            timeout=60.0  # 60 second timeout
+            timeout=300.0  # 300 second timeout
         )
         
         self.extra_headers = {
@@ -74,7 +74,7 @@ class LLMClient:
                     messages=messages,
                     temperature=1.2,
                     max_tokens=8192,
-                    timeout=90.0  # 90 second timeout for individual requests
+                    timeout=300.0  # 300 second timeout for individual requests
                 )
                 
                 if completion and completion.choices:
