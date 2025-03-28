@@ -365,40 +365,64 @@ class DatabaseHandler:
             source_col = self.pipeline_stages[0][0]
             source_cols = source_col.split('+')
             
-            # Build the SELECT part for potentially multiple source columns
+            # For multiple columns, we need to fetch each column separately
             if len(source_cols) == 1:
                 # Simple case - just one source column
-                select_part = f'"{source_cols[0]}"'
+                query = f'''
+                    SELECT index, "{source_cols[0]}"
+                    FROM "{self.data_table}"
+                    WHERE "{self.pipeline_stages[-1][1]}" IS NULL
+                    ORDER BY index ASC
+                    LIMIT %s
+                '''
+                print(f"\nQuery to execute:")
+                print(f"{query % limit}")  # Show the actual query with limit value
+                print(f"Pipeline stages: {self.pipeline_stages}")
+                
+                # Execute and get results
+                self.cursor.execute(query, (limit,))
+                results = self.cursor.fetchall()
+                print(f"Found {len(results)} unprocessed chunks")
+                
+                if results:
+                    print("\nFirst result:")
+                    print(f"Index: {results[0][0]}")
+                    print(f"Content: {results[0][1][:100]}...")  # First 100 chars
+                
+                return results
             else:
-                # Multiple source columns to concatenate with newlines
-                concat_parts = []
-                for col in source_cols:
-                    concat_parts.append(f'"{col}"')
-                select_part = " || '\n\n\n\n' || ".join(concat_parts)
-            
-            # Simple query to find first NULL in destination column
-            query = f'''
-                SELECT index, {select_part}
-                FROM "{self.data_table}"
-                WHERE "{self.pipeline_stages[-1][1]}" IS NULL
-                ORDER BY index ASC
-                LIMIT %s
-            '''
-            print(f"\nQuery to execute:")
-            print(f"{query % limit}")  # Show the actual query with limit value
-            print(f"Pipeline stages: {self.pipeline_stages}")
-            
-            # Execute and get results
-            self.cursor.execute(query, (limit,))
-            results = self.cursor.fetchall()
-            print(f"Found {len(results)} unprocessed chunks")
-            
-            if results:
-                print("\nFirst result:")
-                print(f"Index: {results[0][0]}")
-                print(f"Content: {results[0][1][:100]}...")  # First 100 chars
-            
-            return results
+                # Multiple columns case - fetch all needed columns
+                select_cols = ", ".join([f'"{col}"' for col in source_cols])
+                query = f'''
+                    SELECT index, {select_cols}
+                    FROM "{self.data_table}"
+                    WHERE "{self.pipeline_stages[-1][1]}" IS NULL
+                    ORDER BY index ASC
+                    LIMIT %s
+                '''
+                print(f"\nQuery to execute:")
+                print(f"{query % limit}")  # Show the actual query with limit value
+                print(f"Pipeline stages: {self.pipeline_stages}")
+                
+                # Execute and get results
+                self.cursor.execute(query, (limit,))
+                db_results = self.cursor.fetchall()
+                print(f"Found {len(db_results)} unprocessed chunks")
+                
+                # Process results to concatenate columns
+                results = []
+                for row in db_results:
+                    index = row[0]
+                    # Concatenate all source columns with newlines
+                    concatenated = "\n\n\n\n".join([str(col) if col is not None else "" for col in row[1:]])
+                    results.append((index, concatenated))
+                
+                if results:
+                    print("\nFirst result:")
+                    print(f"Index: {results[0][0]}")
+                    print(f"Content: {results[0][1][:100]}...")  # First 100 chars
+                
+                return results
         except Exception as e:
             print(f"Error fetching unprocessed chunks: {e}")
             return []
