@@ -364,6 +364,7 @@ class DatabaseHandler:
             # Get source column(s) - handle potential concatenation with +
             source_col = self.pipeline_stages[0][0]
             source_cols = source_col.split('+')
+            print("source_cols", source_cols)
             
             # For multiple columns, we need to fetch each column separately
             if len(source_cols) == 1:
@@ -393,6 +394,7 @@ class DatabaseHandler:
             else:
                 # Multiple columns case - fetch all needed columns
                 select_cols = ", ".join([f'"{col}"' for col in source_cols])
+                print("select_cols", select_cols)
                 query = f'''
                     SELECT index, {select_cols}
                     FROM "{self.data_table}"
@@ -415,6 +417,7 @@ class DatabaseHandler:
                     index = row[0]
                     # Concatenate all source columns with newlines
                     concatenated = "\n\n\n\n".join([str(col) if col is not None else "" for col in row[1:]])
+                    print("concat",concatenated)
                     results.append((index, concatenated))
                 
                 if results:
