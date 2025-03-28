@@ -63,11 +63,18 @@ def process_all(table_name: str, api_key: str, base_url: str, model: str, thread
 
         total_start = datetime.now()
         # Get total count and already processed count
-        total_count = db.get_total_count()
-        processed_count = db.get_processed_count()
-        remaining_count = total_count - processed_count
-        
-        print(f"\nProcessing remaining {remaining_count} chunks ({processed_count}/{total_count} already processed)...")
+        try:
+            total_count = db.get_total_count()
+            processed_count = db.get_processed_count()
+            remaining_count = total_count - processed_count
+            
+            print(f"\nProcessing remaining {remaining_count} chunks ({processed_count}/{total_count} already processed)...")
+        except Exception as e:
+            print(f"Error getting counts: {str(e)}")
+            print("Continuing with processing anyway...")
+            total_count = 0
+            processed_count = 0
+            remaining_count = 0
         with click.progressbar(length=total_count,
                              label='Progress',
                              show_pos=True,

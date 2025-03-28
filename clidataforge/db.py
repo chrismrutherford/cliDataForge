@@ -373,6 +373,7 @@ class DatabaseHandler:
                     SELECT index, "{source_cols[0]}"
                     FROM "{self.data_table}"
                     WHERE "{self.pipeline_stages[-1][1]}" IS NULL
+                    AND "{source_cols[0]}" IS NOT NULL
                     ORDER BY index ASC
                     LIMIT %s
                 '''
@@ -394,11 +395,18 @@ class DatabaseHandler:
             else:
                 # Multiple columns case - fetch all needed columns
                 select_cols = ", ".join([f'"{col}"' for col in source_cols])
-                print("select_cols", select_cols)
+                
+                # Build conditions to ensure at least one source column has data
+                not_null_conditions = []
+                for col in source_cols:
+                    not_null_conditions.append(f'"{col}" IS NOT NULL')
+                not_null_clause = " OR ".join(not_null_conditions)
+                
                 query = f'''
                     SELECT index, {select_cols}
                     FROM "{self.data_table}"
                     WHERE "{self.pipeline_stages[-1][1]}" IS NULL
+                    AND ({not_null_clause})
                     ORDER BY index ASC
                     LIMIT %s
                 '''
@@ -417,7 +425,6 @@ class DatabaseHandler:
                     index = row[0]
                     # Concatenate all source columns with newlines
                     concatenated = "\n\n\n\n".join([str(col) if col is not None else "" for col in row[1:]])
-                    print("concat",concatenated)
                     results.append((index, concatenated))
                 
                 if results:
@@ -566,11 +573,23 @@ class DatabaseHandler:
         self.connect()
         try:
             source_col = self.pipeline_stages[0][0]
-            query = f'''
-                SELECT COUNT(*)
-                FROM "{self.data_table}"
-                WHERE "{source_col}" IS NOT NULL
-            '''
+            # Handle concatenated source columns (col1+col2)
+            if '+' in source_col:
+                source_cols = source_col.split('+')
+                # Build a query that checks if ANY of the source columns have data
+                conditions = [f'"{col}" IS NOT NULL' for col in source_cols]
+                where_clause = ' OR '.join(conditions)
+                query = f'''
+                    SELECT COUNT(*)
+                    FROM "{self.data_table}"
+                    WHERE {where_clause}
+                '''
+            else:
+                query = f'''
+                    SELECT COUNT(*)
+                    FROM "{self.data_table}"
+                    WHERE "{source_col}" IS NOT NULL
+                '''
             self.cursor.execute(query)
             return self.cursor.fetchone()[0]
         except Exception as e:
