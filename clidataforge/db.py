@@ -361,9 +361,24 @@ class DatabaseHandler:
         """Get unprocessed chunks from the database"""
         self.connect()
         try:
+            # Get source column(s) - handle potential concatenation with +
+            source_col = self.pipeline_stages[0][0]
+            source_cols = source_col.split('+')
+            
+            # Build the SELECT part for potentially multiple source columns
+            if len(source_cols) == 1:
+                # Simple case - just one source column
+                select_part = f'"{source_cols[0]}"'
+            else:
+                # Multiple source columns to concatenate with newlines
+                concat_parts = []
+                for col in source_cols:
+                    concat_parts.append(f'"{col}"')
+                select_part = " || '\n\n\n\n' || ".join(concat_parts)
+            
             # Simple query to find first NULL in destination column
             query = f'''
-                SELECT index, "{self.pipeline_stages[0][0]}"
+                SELECT index, {select_part}
                 FROM "{self.data_table}"
                 WHERE "{self.pipeline_stages[-1][1]}" IS NULL
                 ORDER BY index ASC

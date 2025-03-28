@@ -27,10 +27,13 @@ class PipelineExecutor:
         self.db = db_handler
         self.model = model
         # Parse stages into source:destination pairs
+        # Source can be multiple columns concatenated with +
         self.stages = []
         for stage in stages.split(','):
-            source, dest = stage.strip().split(':')
-            self.stages.append((source.strip(), dest.strip()))
+            source_part, dest = stage.strip().split(':')
+            # Handle potential multiple source columns (src1+src2)
+            source = source_part.strip()
+            self.stages.append((source, dest.strip()))
             
         print(f"\nInitializing pipeline with stages: {self.stages}")
         
@@ -39,7 +42,10 @@ class PipelineExecutor:
         
     def process_stage(self, chunk_index: int, source_col: str, dest_col: str,
                      prompt: Optional[str], previous_response: Optional[str]) -> str:
-        """Process a single stage of the pipeline"""
+        """Process a single stage of the pipeline
+        
+        For the first stage, source_col can be multiple columns concatenated with +
+        """
         system_prompt = self.db.get_system_prompt(dest_col)
         if not system_prompt:
             print(f"\nFATAL ERROR: No system prompt found for destination column '{dest_col}'")
@@ -93,10 +99,13 @@ class PipelineExecutor:
         
         # First validate all source columns exist
         for source, _ in self.stages:
-            if source not in actual_columns:
-                closest = self.find_closest_match(source, actual_columns)
-                suggestion = f" Did you mean '{closest}'?" if closest else ""
-                raise ValueError(f"Source column '{source}' does not exist.{suggestion}")
+            # Handle potential multiple source columns (src1+src2)
+            source_cols = source.split('+')
+            for src_col in source_cols:
+                if src_col not in actual_columns:
+                    closest = self.find_closest_match(src_col, actual_columns)
+                    suggestion = f" Did you mean '{closest}'?" if closest else ""
+                    raise ValueError(f"Source column '{src_col}' does not exist.{suggestion}")
         
         # Then ensure all destination columns exist
         self.db.validate_columns(self.stages)
