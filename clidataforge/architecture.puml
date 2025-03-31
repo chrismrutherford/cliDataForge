@@ -125,6 +125,7 @@ package "LlamaFlow" {
     note right of Executor
         Pipeline Features:
         - Multi-stage processing
+        - Multi-source column support (col1+col2)
         - Response validation
         - Error handling
         - Minimum cycle time (15s)
@@ -132,6 +133,7 @@ package "LlamaFlow" {
         - Parallel execution
         - Transaction management
         - Column validation
+        - Closest column name suggestions
     end note
 
     note right of LLM

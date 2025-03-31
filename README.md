@@ -10,14 +10,26 @@ Pipeline stages are specified as comma-separated pairs of `source:destination` c
 - `chunk:summary`: Generate summary from input chunk
 - `summary:analysis`: Generate analysis from summary
 - `analysis:conclusion`: Generate conclusion from analysis
+- `src1+src2:combined`: Concatenate multiple source columns into one destination
 
-Example pipeline specification:
+Example pipeline specifications:
 ```bash
+# Basic linear pipeline
 --stages "chunk:summary,summary:analysis,analysis:conclusion"
+
+# Using multiple source columns
+--stages "title+content:summary,summary:analysis"
 ```
 
 Each stage's processing is guided by system prompts stored in the system prompts table.
 The pipeline automatically manages dependencies between stages and ensures data consistency.
+
+### Multi-Source Columns
+
+You can combine multiple source columns using the `+` operator:
+- Source columns are concatenated with newlines between them
+- All specified source columns must exist in the table
+- This is particularly useful for combining related data (e.g., title and content)
 
 
 ## Architecture
@@ -101,19 +113,23 @@ Options:
 Process all unprocessed chunks in parallel through the pipeline.
 
 ```bash
-python -m clidataforge process-all --stages "source:dest[,source:dest...]" [options]
+python -m clidataforge process-all TABLE_NAME --stages "source:dest[,source:dest...]" [options]
 ```
 
 Options:
-- `--api-key`: API key for LLM service (env: CLIDATAFORGE_API_KEY)
-- `--base-url`: Base URL for OpenAI-compatible API (env: OPENAI_BASE_URL)
-- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
+- `--api-key`: API key for LLM service (env: CLI_DF_API_KEY)
+- `--base-url`: Base URL for OpenAI-compatible API (env: CLI_DF_BASE_URL)
+- `--model`: Model to use (default: 'deepseek-chat')
 - `--threads`: Number of parallel threads (default: 1)
 - `--stages`: Required. Comma-separated list of source:destination pairs
 
-Example:
+Examples:
 ```bash
-python -m clidataforge process-all --stages "chunk:summary,summary:analysis,analysis:conclusion" --threads 4
+# Basic pipeline
+python -m clidataforge process-all my_table --stages "chunk:summary,summary:analysis,analysis:conclusion" --threads 4
+
+# Using multiple source columns
+python -m clidataforge process-all my_table --stages "title+content:summary,summary:analysis" --threads 2
 ```
 
 ### process-chunk
@@ -121,14 +137,23 @@ python -m clidataforge process-all --stages "chunk:summary,summary:analysis,anal
 Process a single unprocessed chunk through the pipeline.
 
 ```bash
-python -m clidataforge process-chunk --stages "source:dest[,source:dest...]" [options]
+python -m clidataforge process-chunk TABLE_NAME --stages "source:dest[,source:dest...]" [options]
 ```
 
 Options:
-- `--api-key`: API key for LLM service (env: LLAMAFLOW_API_KEY)
-- `--base-url`: Base URL for OpenAI-compatible API (env: OPENAI_BASE_URL)
-- `--model`: Model to use (default: 'meta-llama/llama-3.3-70b-instruct')
+- `--api-key`: API key for LLM service (env: CLI_DF_API_KEY)
+- `--base-url`: Base URL for OpenAI-compatible API (env: CLI_DF_BASE_URL)
+- `--model`: Model to use (default: 'deepseek-chat')
 - `--stages`: Required. Comma-separated list of source:destination pairs
+
+Examples:
+```bash
+# Basic pipeline
+python -m clidataforge process-chunk my_table --stages "chunk:summary,summary:analysis"
+
+# Using multiple source columns
+python -m clidataforge process-chunk my_table --stages "title+body:summary"
+```
 
 ### insert-data
 
@@ -176,9 +201,32 @@ The following environment variables can be used:
 - `DB_HOST`: Database host (default: 'localhost')
 - `DB_PORT`: Database port (default: '5432')
 
+## Advanced Features
+
+### Column Name Validation
+
+The system validates column names and provides helpful suggestions if you mistype a column name:
+```
+Error: Source column 'titl' does not exist. Did you mean 'title'?
+```
+
+### Table Management
+
+- Create tables with custom columns
+- List all tables in the database
+- View detailed column information
+- Add, delete, or clear columns
+
+### Prompt Management
+
+- Store system prompts per table and stage
+- View, add, update, or delete prompts
+- Table-specific prompts with `table_name:stage` format
+
 ## Pipeline Features
 
 - Multi-stage processing with configurable source/destination columns
+- Multi-source column support (concatenate columns with `+`)
 - Parallel processing with configurable thread count
 - Automatic column creation and validation
 - Progress tracking and error handling
@@ -188,3 +236,5 @@ The following environment variables can be used:
 - Column management (create/delete/clear/save)
 - Detailed column information display
 - JSON data import/export capabilities
+- Column name validation with suggestions
+- Table-specific system prompts
