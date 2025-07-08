@@ -29,6 +29,7 @@ class LLMClient:
         
         self.base_url = base_url or os.getenv("CLI_DF_BASE_URL", "http://192.168.1.158:8080")
         print(f"LLMClient using base_url: {self.base_url}")  # Debug output
+        print(f"LLMClient using api_key: {self.api_key}")  # Debug output
         self.client = LlamaCppApi(base_url=self.base_url, api_key=self.api_key)
         
         # Initialize tokenizer
@@ -92,7 +93,8 @@ class LLMClient:
                     
             except Exception as e:
                 print(f"Error in completion (attempt {attempt + 1}/{max_retries}): {str(e)}")
-                print(f"messages", messages)
+                print(f"Base URL being used: {self.base_url}")
+                print(f"Messages: {messages}")
                 if "Content Exists Risk" in str(e):
                     return "400"
                 if attempt < max_retries - 1:
