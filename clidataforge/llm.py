@@ -13,32 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from openai import OpenAI
+from .llamacpp.LlamaCppApi import LlamaCppApi
+from transformers import AutoTokenizer
 from typing import List, Dict, Any, Optional
 import os
 import time
 from dotenv import load_dotenv
 
 class LLMClient:
-    """Wrapper for LLM interactions using OpenRouter"""
+    """Wrapper for LLM interactions using LlamaCpp API"""
     
     def __init__(self, api_key: str = None, app_name: str = "cliDataForge", site_url: str = None, base_url: str = None):
         load_dotenv()
         self.api_key = api_key or os.getenv("CLI_DF_API_KEY")
-        if not self.api_key:
-            raise ValueError("API key not found")
-            
-        self.client = OpenAI(
-            base_url=base_url or os.getenv("CLI_DF_BASE_URL", "https://api.deepseek.com"),
-            api_key=self.api_key,
-            timeout=300.0  # 300 second timeout
-        )
         
-        self.extra_headers = {
-            "X-Title": app_name
-        }
-        if site_url:
-            self.extra_headers["HTTP-Referer"] = site_url
+        self.base_url = base_url or os.getenv("CLI_DF_BASE_URL", "http://192.168.1.158:8080")
+        self.client = LlamaCppApi(base_url=self.base_url, api_key=self.api_key)
+        
+        # Initialize tokenizer
+        model_name = "Qwen/Qwen3-235B-A22B"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        
+        self.app_name = app_name
+        self.site_url = site_url
             
     def build_messages(self, prompt: str, system_prompt: str, 
                       previous_response: Optional[str] = None) -> List[Dict[str, str]]:
@@ -63,27 +60,39 @@ class LLMClient:
                 model: str = None,
                 max_retries: int = 3) -> str:
         """Send a completion request to the LLM with retry logic"""
-        # Use environment variable if model not specified
+        # Model parameter is kept for compatibility but not used with LlamaCpp
         model = model or os.getenv("CLI_DF_MODEL", "deepseek-chat")
-        """Send a completion request to the LLM with retry logic"""
+        
         for attempt in range(max_retries):
             try:
-                completion = self.client.chat.completions.create(
-                    extra_headers=self.extra_headers,
-                    model=model,
-                    messages=messages,
-                    temperature=1.2,
-                    max_tokens=8192,
-                    timeout=300.0  # 300 second timeout for individual requests
+                # Apply chat template to create a single text prompt
+                prompt_text = self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False
                 )
                 
-                if completion and completion.choices:
-                    return completion.choices[0].message.content
+                # Use LlamaCppApi for completion
+                response = self.client.post_completion(prompt_text, {
+                    "n_predict": 8192,  # equivalent to max_tokens
+                    "temperature": 1.2,
+                    "stop": ["<|im_end|>", "</s>", "<|end|>", "<|eot_id|>", self.tokenizer.eos_token]
+                })
+                
+                if response and response.status_code == 200:
+                    content = response.json().get("content", "")
+                    if content:
+                        return content
+                    else:
+                        raise Exception("Empty response content")
+                else:
+                    raise Exception(f"API request failed with status: {response.status_code if response else 'No response'}")
                     
             except Exception as e:
                 print(f"Error in completion (attempt {attempt + 1}/{max_retries}): {str(e)}")
                 print(f"messages", messages)
-                if("Content Exists Risk" in str(e)):
+                if "Content Exists Risk" in str(e):
                     return "400"
                 if attempt < max_retries - 1:
                     # Exponential backoff: wait longer between each retry
