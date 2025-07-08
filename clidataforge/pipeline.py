@@ -22,7 +22,7 @@ from .db import DatabaseHandler
 class PipelineExecutor:
     """Executes the LLM pipeline with database integration"""
     
-    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str, model: str = "deepseek-chat"):
+    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str, model: str = "llama-chat"):
         self.llm = llm_client
         self.db = db_handler
         self.model = model

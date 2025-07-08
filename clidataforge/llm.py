@@ -63,7 +63,7 @@ class LLMClient:
                 max_retries: int = 3) -> str:
         """Send a completion request to the LLM with retry logic"""
         # Model parameter is kept for compatibility but not used with LlamaCpp
-        model = model or os.getenv("CLI_DF_MODEL", "deepseek-chat")
+        model = model or os.getenv("CLI_DF_MODEL", "llama-chat")
         
         for attempt in range(max_retries):
             try:
