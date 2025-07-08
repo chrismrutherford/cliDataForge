@@ -28,6 +28,7 @@ class LLMClient:
         self.api_key = api_key or os.getenv("CLI_DF_API_KEY")
         
         self.base_url = base_url or os.getenv("CLI_DF_BASE_URL", "http://192.168.1.158:8080")
+        print(f"LLMClient using base_url: {self.base_url}")  # Debug output
         self.client = LlamaCppApi(base_url=self.base_url, api_key=self.api_key)
         
         # Initialize tokenizer

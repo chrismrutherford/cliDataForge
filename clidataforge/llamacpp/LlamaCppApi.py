@@ -30,6 +30,7 @@ class LlamaCppApi:
         :return: The JSON-decoded response data, or None on failure.
         """
         url = f"{self.base_url}/{endpoint}"
+        print(f"Making request to: {url}")  # Debug output
         try:
             response = requests.request(method, url, headers=self.headers, json=data, params=params, stream=stream)
             response.raise_for_status()
