@@ -512,5 +512,47 @@ def delete_column(table_name: str, column: str):
         if 'db' in locals():
             db.disconnect()
 
+@cli.command(name='setup')
+@click.option('--force', is_flag=True, help='Overwrite existing .env file')
+def setup(force: bool):
+    """Create a .env file with required environment variables"""
+    env_file = '.env'
+    
+    if os.path.exists(env_file) and not force:
+        click.echo(f"Error: {env_file} already exists. Use --force to overwrite.", err=True)
+        return
+    
+    try:
+        env_content = """# Database Configuration
+export DB_NAME=llmdata
+export DB_USER=postgres
+export DB_PASSWORD=your_password_here
+export DB_HOST=localhost
+export DB_PORT=5432
+
+# LLM API Configuration
+export CLI_DF_API_KEY=your_api_key_here
+export CLI_DF_BASE_URL=https://openrouter.ai/api/v1
+export CLI_DF_MODEL=your_model_here
+
+# Usage:
+# 1. Edit the values above with your actual credentials
+# 2. Source this file: source .env
+# 3. Or load it in your shell profile
+"""
+        
+        with open(env_file, 'w') as f:
+            f.write(env_content)
+            
+        click.echo(f"Successfully created {env_file}")
+        click.echo("\nNext steps:")
+        click.echo("1. Edit the .env file with your actual values")
+        click.echo("2. Load the environment variables:")
+        click.echo(f"   source {env_file}")
+        click.echo("3. Or add to your shell profile for persistence")
+        
+    except Exception as e:
+        click.echo(f"Error creating .env file: {str(e)}", err=True)
+
 if __name__ == '__main__':
     cli()
