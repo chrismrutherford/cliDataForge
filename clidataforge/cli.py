@@ -29,11 +29,10 @@ def cli():
 @click.argument('table_name')
 @click.option('--api-key', envvar='CLI_DF_API_KEY', help='API key for LLM service')
 @click.option('--base-url', envvar='CLI_DF_BASE_URL', help='Base URL for OpenAI-compatible API service')
-@click.option('--model', envvar='CLI_DF_MODEL', help='Model to use (env: CLI_DF_MODEL)')
 @click.option('--threads', default=1, type=int, help='Number of parallel threads (default: 1)')
 @click.option('--stages', required=True, help='Comma-separated list of source:destination column pairs (e.g. chunk:summary,summary:analysis). First stage can use + to concatenate multiple source columns (e.g. src1+src2:dest)')
 @click.option('--sys-table', default='cliDataForgeSystem', show_default=True, help='Name of system prompts table')
-def process_all(table_name: str, api_key: str, base_url: str, model: str, threads: int, stages: str, sys_table: str):
+def process_all(table_name: str, api_key: str, base_url: str, threads: int, stages: str, sys_table: str):
     """Process all unprocessed chunks in the database"""
     try:
         # Parse stages
@@ -43,7 +42,7 @@ def process_all(table_name: str, api_key: str, base_url: str, model: str, thread
         llm = LLMClient(api_key=api_key, base_url=base_url)
         db = DatabaseHandler(sys_table=sys_table, data_table=table_name, 
                            pipeline_stages=stage_pairs)
-        pipeline = PipelineExecutor(llm, db, stages, model=model)
+        pipeline = PipelineExecutor(llm, db, stages)
         
         import time
         from datetime import datetime
@@ -121,10 +120,9 @@ def process_all(table_name: str, api_key: str, base_url: str, model: str, thread
 @click.argument('table_name')
 @click.option('--api-key', envvar='CLI_DF_API_KEY', help='API key for LLM service')
 @click.option('--base-url', envvar='CLI_DF_BASE_URL', help='Base URL for OpenAI-compatible API service')
-@click.option('--model', envvar='CLI_DF_MODEL', help='Model to use (env: CLI_DF_MODEL)')
 @click.option('--stages', required=True, help='Comma-separated list of source:destination column pairs (e.g. chunk:summary,summary:analysis). First stage can use + to concatenate multiple source columns (e.g. src1+src2:dest)')
 @click.option('--sys-table', default='cliDataForgeSystem', show_default=True, help='Name of system prompts table')
-def process_chunk(table_name: str, api_key: str, base_url: str, model: str, stages: str, sys_table: str):
+def process_chunk(table_name: str, api_key: str, base_url: str, stages: str, sys_table: str):
     """Process a single unprocessed chunk through the pipeline"""
     try:
         # Parse stages
@@ -135,7 +133,7 @@ def process_chunk(table_name: str, api_key: str, base_url: str, model: str, stag
         db = DatabaseHandler(sys_table=sys_table, data_table=table_name, pipeline_stages=stage_pairs)
             
         llm = LLMClient(api_key=api_key, base_url=base_url)
-        pipeline = PipelineExecutor(llm, db, stages, model=model)
+        pipeline = PipelineExecutor(llm, db, stages)
         
         chunks = db.get_unprocessed_chunks(limit=1)
         if not chunks:
