@@ -15,6 +15,7 @@
 
 from datetime import datetime
 import time
+import os
 from typing import List, Tuple, Optional
 from .llm import LLMClient
 from .db import DatabaseHandler
@@ -22,10 +23,12 @@ from .db import DatabaseHandler
 class PipelineExecutor:
     """Executes the LLM pipeline with database integration"""
     
-    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str, model: str = "deepseek-chat"):
+    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str, model: str = None):
         self.llm = llm_client
         self.db = db_handler
-        self.model = model
+        self.model = model or os.getenv("CLI_DF_MODEL")
+        if not self.model:
+            raise ValueError("CLI_DF_MODEL environment variable must be set or model parameter provided")
         # Parse stages into source:destination pairs
         # Source can be multiple columns concatenated with +
         self.stages = []
