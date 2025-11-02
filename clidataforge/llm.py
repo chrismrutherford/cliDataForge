@@ -26,10 +26,14 @@ class LLMClient:
         load_dotenv()
         self.api_key = api_key or os.getenv("CLI_DF_API_KEY")
         if not self.api_key:
-            raise ValueError("API key not found")
+            raise ValueError("CLI_DF_API_KEY environment variable must be set")
+            
+        base_url = base_url or os.getenv("CLI_DF_BASE_URL")
+        if not base_url:
+            raise ValueError("CLI_DF_BASE_URL environment variable must be set")
             
         self.client = OpenAI(
-            base_url=base_url or os.getenv("CLI_DF_BASE_URL", "https://api.deepseek.com"),
+            base_url=base_url,
             api_key=self.api_key,
             timeout=300.0  # 300 second timeout
         )
@@ -64,8 +68,9 @@ class LLMClient:
                 max_retries: int = 3) -> str:
         """Send a completion request to the LLM with retry logic"""
         # Use environment variable if model not specified
-        model = model or os.getenv("CLI_DF_MODEL", "deepseek-chat")
-        """Send a completion request to the LLM with retry logic"""
+        model = model or os.getenv("CLI_DF_MODEL")
+        if not model:
+            raise ValueError("CLI_DF_MODEL environment variable must be set")
         for attempt in range(max_retries):
             try:
                 completion = self.client.chat.completions.create(
