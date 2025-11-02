@@ -64,11 +64,9 @@ class LLMClient:
         return messages
 
     def complete(self, messages: List[Dict[str, str]], 
-                model: str = None,
                 max_retries: int = 3) -> str:
         """Send a completion request to the LLM with retry logic"""
-        # Use environment variable if model not specified
-        model = model or os.getenv("CLI_DF_MODEL")
+        model = os.getenv("CLI_DF_MODEL")
         if not model:
             raise ValueError("CLI_DF_MODEL environment variable must be set")
         for attempt in range(max_retries):

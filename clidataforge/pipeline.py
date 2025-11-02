@@ -23,12 +23,12 @@ from .db import DatabaseHandler
 class PipelineExecutor:
     """Executes the LLM pipeline with database integration"""
     
-    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str, model: str = None):
+    def __init__(self, llm_client: LLMClient, db_handler: DatabaseHandler, stages: str):
         self.llm = llm_client
         self.db = db_handler
-        self.model = model or os.getenv("CLI_DF_MODEL")
+        self.model = os.getenv("CLI_DF_MODEL")
         if not self.model:
-            raise ValueError("CLI_DF_MODEL environment variable must be set or model parameter provided")
+            raise ValueError("CLI_DF_MODEL environment variable must be set")
         # Parse stages into source:destination pairs
         # Source can be multiple columns concatenated with +
         self.stages = []
@@ -60,7 +60,7 @@ class PipelineExecutor:
             raise ValueError(f"Missing system prompt for '{dest_col}'")
             
         messages = self.llm.build_messages(prompt, system_prompt, previous_response)
-        response = self.llm.complete(messages, model=self.model)
+        response = self.llm.complete(messages)
         
         if "Error:" in response:
             raise ValueError(f"LLM error in {dest_col}: {response}")
