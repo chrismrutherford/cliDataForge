@@ -515,7 +515,7 @@ def delete_column(table_name: str, column: str):
 @cli.command(name='setup')
 @click.option('--force', is_flag=True, help='Overwrite existing .env file')
 def setup(force: bool):
-    """Create a .env file with required environment variables"""
+    """Interactive setup to create a .env file with required environment variables"""
     env_file = '.env'
     
     if os.path.exists(env_file) and not force:
@@ -523,33 +523,49 @@ def setup(force: bool):
         return
     
     try:
-        env_content = """# Database Configuration
-export DB_NAME=llmdata
-export DB_USER=postgres
-export DB_PASSWORD=your_password_here
-export DB_HOST=localhost
-export DB_PORT=5432
+        click.echo("Welcome to cliDataForge setup!")
+        click.echo("Please provide the following configuration values:\n")
+        
+        # Database Configuration
+        click.echo("=== Database Configuration ===")
+        db_name = click.prompt("Database name", default="llmdata")
+        db_user = click.prompt("Database user", default="postgres")
+        db_password = click.prompt("Database password", hide_input=True)
+        db_host = click.prompt("Database host", default="localhost")
+        db_port = click.prompt("Database port", default="5432")
+        
+        click.echo("\n=== LLM API Configuration ===")
+        api_key = click.prompt("API key", hide_input=True)
+        base_url = click.prompt("Base URL", default="https://openrouter.ai/api/v1")
+        model = click.prompt("Model name (e.g., anthropic/claude-3-haiku)")
+        
+        # Create .env content with user-provided values
+        env_content = f"""# Database Configuration
+export DB_NAME={db_name}
+export DB_USER={db_user}
+export DB_PASSWORD={db_password}
+export DB_HOST={db_host}
+export DB_PORT={db_port}
 
 # LLM API Configuration
-export CLI_DF_API_KEY=your_api_key_here
-export CLI_DF_BASE_URL=https://openrouter.ai/api/v1
-export CLI_DF_MODEL=your_model_here
+export CLI_DF_API_KEY={api_key}
+export CLI_DF_BASE_URL={base_url}
+export CLI_DF_MODEL={model}
 
 # Usage:
-# 1. Edit the values above with your actual credentials
-# 2. Source this file: source .env
-# 3. Or load it in your shell profile
+# Source this file: source .env
+# Or load it in your shell profile for persistence
 """
         
         with open(env_file, 'w') as f:
             f.write(env_content)
             
-        click.echo(f"Successfully created {env_file}")
+        click.echo(f"\nSuccessfully created {env_file}")
         click.echo("\nNext steps:")
-        click.echo("1. Edit the .env file with your actual values")
-        click.echo("2. Load the environment variables:")
+        click.echo("1. Load the environment variables:")
         click.echo(f"   source {env_file}")
-        click.echo("3. Or add to your shell profile for persistence")
+        click.echo("2. Or add to your shell profile for persistence")
+        click.echo("3. Test your configuration with: clidataforge list-tables")
         
     except Exception as e:
         click.echo(f"Error creating .env file: {str(e)}", err=True)
