@@ -2,6 +2,38 @@
 
 cliDataForge provides a command-line interface for managing and executing LLM processing pipelines with PostgreSQL integration.
 
+## Setup
+
+### Environment Variables (Required)
+
+Before using cliDataForge, you must set the following environment variables:
+
+**Database Configuration:**
+- `DB_NAME`: Database name (default: 'llmdata')
+- `DB_USER`: Database user (default: 'postgres') 
+- `DB_PASSWORD`: Database password (required)
+- `DB_HOST`: Database host (default: 'localhost')
+- `DB_PORT`: Database port (default: '5432')
+
+**LLM API Configuration:**
+- `CLI_DF_API_KEY`: API key for LLM service (required)
+- `CLI_DF_BASE_URL`: Base URL for OpenAI-compatible API (required)
+- `CLI_DF_MODEL`: Model name to use for completions (required)
+
+### Quick Setup
+
+Use the interactive setup command to create a `.env` file:
+
+```bash
+python -m clidataforge setup
+```
+
+Then load the environment variables:
+```bash
+source .env
+```
+
+Or add the variables to your shell profile for persistence.
 
 ## Pipeline Stages
 
@@ -31,7 +63,6 @@ You can combine multiple source columns using the `+` operator:
 - All specified source columns must exist in the table
 - This is particularly useful for combining related data (e.g., title and content)
 
-
 ## Architecture
 
 ![cliDataForge Architecture](cliDataForgeArchitecture.png)
@@ -41,8 +72,6 @@ You can combine multiple source columns using the `+` operator:
 These options are available for most commands:
 
 - `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
-- `--model`: Model to use (default: 'deepseek-chat')
-- `--base-url`: Base URL for OpenAI-compatible API (default: 'https://api.deepseek.com')
 
 Note: Most commands require a table name as their first argument. This is a required positional argument, not an option.
 
@@ -117,11 +146,9 @@ python -m clidataforge process-all TABLE_NAME --stages "source:dest[,source:dest
 ```
 
 Options:
-- `--api-key`: API key for LLM service (env: CLI_DF_API_KEY)
-- `--base-url`: Base URL for OpenAI-compatible API (env: CLI_DF_BASE_URL)
-- `--model`: Model to use (default: 'deepseek-chat')
 - `--threads`: Number of parallel threads (default: 1)
 - `--stages`: Required. Comma-separated list of source:destination pairs
+- `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
 
 Examples:
 ```bash
@@ -141,10 +168,8 @@ python -m clidataforge process-chunk TABLE_NAME --stages "source:dest[,source:de
 ```
 
 Options:
-- `--api-key`: API key for LLM service (env: CLI_DF_API_KEY)
-- `--base-url`: Base URL for OpenAI-compatible API (env: CLI_DF_BASE_URL)
-- `--model`: Model to use (default: 'deepseek-chat')
 - `--stages`: Required. Comma-separated list of source:destination pairs
+- `--sys-table`: Name of system prompts table (default: 'cliDataForgeSystem')
 
 Examples:
 ```bash
@@ -160,10 +185,11 @@ python -m clidataforge process-chunk my_table --stages "title+body:summary"
 Insert JSON list of text chunks into specified column.
 
 ```bash
-python -m clidataforge insert-data JSON_FILE --column COLUMN [options]
+python -m clidataforge insert-data TABLE_NAME JSON_FILE --column COLUMN
 ```
 
 Arguments:
+- `TABLE_NAME`: Name of the table to insert data into
 - `JSON_FILE`: Path to JSON file containing list of text chunks
 - `--column`: Required. Column name to insert data into
 
@@ -172,34 +198,86 @@ Arguments:
 Clear all values in specified column (set to NULL).
 
 ```bash
-python -m clidataforge clear-column --column COLUMN [options]
+python -m clidataforge clear-column TABLE_NAME --column COLUMN
 ```
 
-Options:
+Arguments:
+- `TABLE_NAME`: Name of the table containing the column
 - `--column`: Required. Column to clear
 
 ### list-columns
 
-List all columns in the data table with their types.
+List all columns in the specified table with their types.
 
 ```bash
-python -m clidataforge list-columns [options]
+python -m clidataforge list-columns TABLE_NAME
 ```
+
+Arguments:
+- `TABLE_NAME`: Name of the table to list columns for
 
 Shows detailed column information including data types and maximum lengths.
 
-## Environment Variables
+### list-tables
 
-The following environment variables can be used:
+List all tables in the database.
 
-- `CLI_DF_API_KEY`: API key for LLM service
-- `CLI_DF_BASE_URL`: Base URL for OpenAI-compatible API service (default: 'https://api.deepseek.com')
-- `CLI_DF_MODEL`: Model to use for completions (default: 'deepseek-chat')
-- `DB_NAME`: Database name (default: 'llmdata')
-- `DB_USER`: Database user (default: 'postgres')
-- `DB_PASSWORD`: Database password
-- `DB_HOST`: Database host (default: 'localhost')
-- `DB_PORT`: Database port (default: '5432')
+```bash
+python -m clidataforge list-tables
+```
+
+### create-table
+
+Create a new table with specified columns.
+
+```bash
+python -m clidataforge create-table TABLE_NAME COLUMN:TYPE [COLUMN:TYPE...]
+```
+
+Arguments:
+- `TABLE_NAME`: Name of the table to create
+- `COLUMN:TYPE`: Column definitions in name:type format
+
+Valid types: serial, text, varchar, int, float, boolean, timestamp
+
+Example:
+```bash
+python -m clidataforge create-table mytable id:serial title:text content:text
+```
+
+### list-prompts
+
+List all available system prompts for the specified table.
+
+```bash
+python -m clidataforge list-prompts TABLE_NAME [--sys-table SYS_TABLE]
+```
+
+Arguments:
+- `TABLE_NAME`: Name of the table to list prompts for
+
+### create-column
+
+Create a new TEXT column in the table.
+
+```bash
+python -m clidataforge create-column TABLE_NAME --column COLUMN
+```
+
+Arguments:
+- `TABLE_NAME`: Name of the table to add column to
+- `--column`: Required. Column name to create
+
+### setup
+
+Interactive setup to create a .env file with required environment variables.
+
+```bash
+python -m clidataforge setup [--force]
+```
+
+Options:
+- `--force`: Overwrite existing .env file
 
 ## Advanced Features
 
