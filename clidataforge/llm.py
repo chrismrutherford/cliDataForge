@@ -36,6 +36,7 @@ class LLMClient:
             base_url=base_url,
             api_key=self.api_key,
             timeout=300.0  # 300 second timeout
+
         )
         
         self.extra_headers = {
@@ -75,9 +76,9 @@ class LLMClient:
                     extra_headers=self.extra_headers,
                     model=model,
                     messages=messages,
-                    temperature=1.2,
-                    max_tokens=8192,
-                    timeout=300.0  # 300 second timeout for individual requests
+                    timeout=300.0,  # 300 second timeout for individual requests
+                    max_tokens=16384,
+                    reasoning_effort="high"
                 )
                 
                 if completion and completion.choices:
